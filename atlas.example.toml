@@ -1,0 +1,46 @@
+[server]
+bind = "127.0.0.1"
+port = 8765
+allowed_db_hosts = ["localhost", "127.0.0.1"]
+data_dir = ".local/data"
+
+[[connections]]
+id = "library"
+label = "Library (PostgreSQL)"
+driver = "postgresql"
+host = "127.0.0.1"
+port = 5432
+database = "pagila"
+user = "reader"
+password_env = "LIBRARY_DB_PASSWORD"
+default_schema = "public"
+color = "#8ab4f8"
+allow_writes = false
+
+# Add any number of connections, with unique IDs.
+# [[connections]]
+# id = "store"
+# label = "Store (MySQL)"
+# driver = "mysql"
+# host = "127.0.0.1"
+# port = 3306
+# database = "sakila"
+# user = "reader"
+# password_env = "STORE_DB_PASSWORD"
+# default_schema = "sakila"
+# color = "#e5a85e"
+# allow_writes = false
+
+# [routines_repository]
+# path = "../my-routines"
+# pattern = "{schema}/{kind}s/{name}.sql"
+
+# [[dump_sources]]
+# connection = "library"
+# type = "directory"
+# path = "./backups"
+# pattern = "*.sql.gz"
+# local_path = ".local/dumps/library.sql.gz"
+# restore_command = 'gzip -dc "$ATLAS_DUMP_PATH" | psql --dbname=pagila'
+
+# S3 variant: type = "s3-versioned", bucket = "my-backups", key = "library.sql.gz".

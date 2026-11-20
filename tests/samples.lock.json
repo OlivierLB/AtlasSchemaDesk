@@ -1,0 +1,22 @@
+[
+  {
+    "name": "pagila-schema.sql",
+    "url": "https://raw.githubusercontent.com/devrimgunduz/pagila/d9610f790b723daad5411dd78664d170a58dafa2/pagila-schema.sql",
+    "sha256": "c6b0f226df3e2fa1a197ad0cb8a683a43dfba4a2c81d282325d2e8e5a9d73dfa"
+  },
+  {
+    "name": "pagila-data.sql",
+    "url": "https://raw.githubusercontent.com/devrimgunduz/pagila/d9610f790b723daad5411dd78664d170a58dafa2/pagila-data.sql",
+    "sha256": "fb81bec377687c83e11d2a24916ae28656d85550bf0ada798305bf7e2af9823b"
+  },
+  {
+    "name": "sakila-schema.sql",
+    "url": "https://raw.githubusercontent.com/jOOQ/sakila/e089a5b1ec9af0df7a9c6a5d47d49fa1736a4e84/mysql-sakila-db/mysql-sakila-schema.sql",
+    "sha256": "f2c41c3bf6d6c239941b4f98fb37afad21f6be12b82bf586202529a793ccc2ee"
+  },
+  {
+    "name": "sakila-data.sql",
+    "url": "https://raw.githubusercontent.com/jOOQ/sakila/e089a5b1ec9af0df7a9c6a5d47d49fa1736a4e84/mysql-sakila-db/mysql-sakila-insert-data.sql",
+    "sha256": "353ef858e4d2d1a60549969283434da15b905aef3ca7099d82b649b75f8de99f"
+  }
+]

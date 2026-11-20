@@ -1,0 +1,39 @@
+services:
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: pagila
+      POSTGRES_USER: atlas_test
+      POSTGRES_PASSWORD: public-test-only
+    ports: ["127.0.0.1:55432:5432"]
+    tmpfs: ["/var/lib/postgresql"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U atlas_test -d pagila"]
+      interval: 2s
+      timeout: 5s
+      retries: 60
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: public-test-only
+      MYSQL_DATABASE: sakila
+    ports: ["127.0.0.1:53306:3306"]
+    tmpfs: ["/var/lib/mysql"]
+    healthcheck:
+      test: ["CMD-SHELL", "MYSQL_PWD=$$MYSQL_ROOT_PASSWORD mysqladmin ping -h 127.0.0.1 -uroot --silent"]
+      interval: 2s
+      timeout: 5s
+      retries: 90
+  postgres10:
+    image: postgres:10
+    environment:
+      POSTGRES_DB: library
+      POSTGRES_USER: atlas_test
+      POSTGRES_PASSWORD: public-test-only
+    ports: ["127.0.0.1:55433:5432"]
+    tmpfs: ["/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U atlas_test -d library"]
+      interval: 2s
+      timeout: 5s
+      retries: 60
