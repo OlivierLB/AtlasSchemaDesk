@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { makeEventWindow, sharedEventTables } from "./eventWindow";
+import { makeEventWindow, sharedEventTables } from "./eventSchedule";
 import type { Program } from "./model";
 
 describe("event investigation windows", () => {

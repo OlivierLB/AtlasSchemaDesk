@@ -9,7 +9,7 @@ import {
   localTime,
   makeEventWindow,
   sharedEventTables,
-} from "./eventWindow";
+} from "./eventSchedule";
 import { Icon } from "./Icon";
 import "./EventWindow.css";
 
