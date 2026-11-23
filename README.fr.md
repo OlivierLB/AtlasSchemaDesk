@@ -4,7 +4,7 @@
 
 Un explorateur local pour bases PostgreSQL et MySQL. Parcourez schémas, tables et clés étrangères, examinez les programmes stockés et leur impact sur les tables, lisez et filtrez les données, et exécutez du SQL dans une console avec validation et annulation explicites. Des modules optionnels comparent les routines à un dépôt SQL local et listent ou restaurent des sauvegardes.
 
-Atlas Schema Desk est un binaire Go unique qui embarque son interface React. Il tourne entièrement sur votre machine, sous Linux, Windows ou macOS, sans compte cloud ni télémétrie. PostgreSQL 10+ et MySQL 8 sont testés (la CI utilise PostgreSQL 10, PostgreSQL 18 et MySQL 8.4).
+Atlas Schema Desk est un binaire Go unique qui embarque son interface React : une application de bureau avec sa propre fenêtre et des mises à jour intégrées sous Windows et Linux, ou un serveur local ouvert dans le navigateur (Linux, Windows, macOS, Docker). Il tourne entièrement sur votre machine, sans compte cloud ni télémétrie (en dehors de vos bases et sources de sauvegarde, sa seule requête sortante est la vérification des mises à jour, désactivable). PostgreSQL 10+ et MySQL 8 sont testés (la CI utilise PostgreSQL 10, PostgreSQL 18 et MySQL 8.4).
 
 ## Fonctionnalités
 
@@ -17,6 +17,7 @@ Atlas Schema Desk est un binaire Go unique qui embarque son interface React. Il 
 - **Historique de schéma** — chaque export calcule une empreinte du catalogue ; une nouvelle version n’est enregistrée que si une source a changé.
 - **Connexions et sauvegardes** — ajout, modification et suppression des connexions et sources de sauvegarde depuis l’interface, puis application de la configuration par un redémarrage sur place.
 - **Tâches de maintenance** — export des catalogues, liste et restauration des sauvegardes s’exécutent comme des tâches annulables, avec des journaux en direct bornés et expurgés.
+- **Application de bureau** — installeur pour Windows, installation en une commande sous Linux, démarre vide et se configure depuis l’interface, propose des mises à jour vérifiées.
 
 Les libellés de l’interface sont actuellement en français.
 
@@ -24,15 +25,43 @@ Les libellés de l’interface sont actuellement en français.
 
 | Usage | Nécessite |
 | --- | --- |
-| Lancer un binaire compilé | rien d’autre (pilotes et interface sont intégrés) |
+| Application de bureau sous Windows | Windows 10 ou 11 (le moteur WebView2 est installé s’il manque) |
+| Application de bureau sous Linux | x86_64 avec WebKitGTK 4.1 (installé par `get.sh` s’il manque) |
+| Lancer un binaire serveur | rien d’autre (pilotes et interface sont intégrés) |
 | Lancer l’image Docker | Docker |
 | Compiler depuis les sources | Go 1.27+ et Node 22.12+ (les installeurs les téléchargent s’ils manquent) |
 | Tests navigateur et d’intégration | Python 3, Playwright avec Firefox, Docker Compose |
 | Sources de sauvegarde S3 | AWS CLI (installée par l’installeur si une source S3 est configurée ; accès configurés à part) |
 
-## Démarrage rapide
+## Installation
 
-Linux et macOS :
+### Application de bureau (recommandé)
+
+Atlas Schema Desk s’installe comme n’importe quelle application, s’ouvre dans sa propre fenêtre et se met à jour toute seule. Rien à compiler.
+
+- **Windows** : téléchargez `atlas-schema-desk_windows_amd64_setup.exe` depuis la [dernière version](https://github.com/OlivierLB/AtlasSchemaDesk/releases/latest) et lancez-le. Aucun droit administrateur : l’installation se fait pour votre utilisateur dans `%LOCALAPPDATA%\Programs\Atlas Schema Desk`, avec des raccourcis dans le menu Démarrer et sur le bureau. L’installeur n’est pas encore signé : si SmartScreen avertit, choisissez **Informations complémentaires → Exécuter quand même**.
+- **Linux** (x86_64) : lancez
+
+  ```sh
+  curl -fsSL https://raw.githubusercontent.com/OlivierLB/AtlasSchemaDesk/main/get.sh | bash
+  ```
+
+  Le script vérifie la somme SHA-256 du téléchargement, installe l’application dans `~/.local/share/atlas-schema-desk/app` (sans `sudo`), l’ajoute au menu des applications et place la commande `atlas-schema-desk` dans `~/.local/bin`. Seulement si WebKitGTK 4.1 manque, il propose de l’installer avec votre gestionnaire de paquets (apt, dnf, pacman ou zypper, avec `sudo`). Ajoutez `-s -- --yes` après `bash` pour accepter sans question.
+- **macOS** : pas encore d’application de bureau ; utilisez le serveur ci-dessous ou Docker.
+
+Au premier lancement, la fenêtre s’ouvre sur un espace vide : cliquez sur **Ajouter une base** et saisissez l’adresse, l’utilisateur et le mot de passe de la base. La configuration est créée dans votre dossier utilisateur (`~/.config/atlas-schema-desk/atlas.toml` sous Linux, `%APPDATA%\atlas-schema-desk\atlas.toml` sous Windows), avec les mots de passe dans le fichier `.env` voisin. Un lancement depuis un dossier qui contient un `atlas.toml` utilise ce fichier à la place.
+
+**Mises à jour** : au lancement, l’application compare sa version à la dernière version publiée sur GitHub. S’il en existe une plus récente, un bandeau propose **Installer et redémarrer** : le fichier est téléchargé, sa somme SHA-256 vérifiée avec le `SHA256SUMS` de la version, puis il est installé et l’application redémarre (sous Windows, l’installeur s’exécute en silence puis rouvre l’application). Rien ne s’installe sans votre clic, et la mise à jour est refusée, avec un message, tant qu’une transaction, une requête ou une tâche de maintenance est en cours : terminez-la et recliquez. `ATLAS_NO_UPDATE_CHECK=1` désactive la vérification.
+
+**Désinstallation** : Windows *Paramètres → Applications* ; Linux `curl -fsSL https://raw.githubusercontent.com/OlivierLB/AtlasSchemaDesk/main/get.sh | bash -s -- --uninstall`. Votre configuration et les données de la fenêtre (comme l’historique de la console SQL) sont conservées.
+
+### Serveur sans fenêtre
+
+Chaque version publie aussi des archives `atlas-schema-desk-server_<os>_<arch>` pour Linux, macOS (`.tar.gz`) et Windows (`.zip`), amd64 et arm64 : la même application sans fenêtre, pour macOS, un shell distant, un lanceur ou un conteneur. Décompressez l’archive, entrez dans son dossier et lancez `./atlas-schema-desk --open` (Windows : `.\atlas-schema-desk.exe --open`) pour la démarrer et ouvrir l’interface dans le navigateur ; sans configuration, elle démarre vide comme l’application de bureau. Les binaires ne sont pas signés : sous macOS, autorisez le premier lancement avec `xattr -d com.apple.quarantine atlas-schema-desk` (ou *Réglages Système → Confidentialité et sécurité → Ouvrir quand même*). Voir aussi [Docker](#docker).
+
+### Compiler depuis les sources
+
+Pour contribuer ou utiliser la version en cours de développement. Linux et macOS :
 
 ```sh
 git clone https://github.com/OlivierLB/AtlasSchemaDesk.git
@@ -69,7 +98,7 @@ Les installations de paquets système et `winget` sont affichées et confirmées
 | Ne jamais poser de question | `--non-interactive` | `-NonInteractive` |
 | Poser les questions même avec une entrée redirigée | `--configure` | `-Configure` |
 
-### Installation manuelle
+#### Compilation manuelle
 
 ```sh
 make frontend build          # npm ci + build Vite, puis go build dans bin/
@@ -89,7 +118,8 @@ Au démarrage, le serveur exporte les catalogues de chaque connexion ; cliquez s
 ## Ligne de commande
 
 ```text
-atlas-schema-desk [--config atlas.toml] [--port N] [--bind ADRESSE]   démarre le serveur (commande par défaut)
+atlas-schema-desk [--config FICHIER] [--port N] [--bind ADRESSE] [--open] [--headless]
+                                                                      démarre (commande par défaut) : fenêtre dans l’application de bureau, serveur sinon
 atlas-schema-desk check   --config atlas.toml                         teste chaque connexion, en lecture seule
 atlas-schema-desk inspect --config atlas.toml                         affiche un résumé de configuration sans identifiants (JSON)
 atlas-schema-desk export  --config atlas.toml                         exporte les catalogues sans démarrer le serveur
@@ -97,6 +127,8 @@ atlas-schema-desk dumps   --config atlas.toml list                    liste les 
 atlas-schema-desk dumps   --config atlas.toml apply CONNEXION VERSION   restaure une version de sauvegarde
 atlas-schema-desk version                                             affiche la version
 ```
+
+Sans `--config`, le serveur utilise `atlas.toml` du dossier courant s’il existe, sinon le fichier de l’utilisateur (`~/.config/atlas-schema-desk/atlas.toml`, `%APPDATA%\atlas-schema-desk\atlas.toml`, `~/Library/Application Support/atlas-schema-desk/atlas.toml`), créé vide au premier démarrage. `--open` ouvre l’interface dans le navigateur ; `--headless` lance l’application de bureau comme un simple serveur. Un deuxième lancement de l’application de bureau (ou avec `--open`) pendant qu’elle tourne affiche l’instance en cours au lieu d’échouer.
 
 `--port` et `--bind` remplacent les valeurs de `[server]`. L’adresse d’écoute doit être `127.0.0.1`, `localhost` ou `0.0.0.0` (conteneurs uniquement).
 
@@ -154,9 +186,9 @@ allow_writes = false
 
 - Les modifications sont validées par le même chargeur qu’au démarrage, puis écrites dans le fichier de configuration. La version précédente est conservée en `*.previous` ; les commentaires TOML ne sont pas préservés.
 - Un mot de passe saisi dans le formulaire est écrit dans le fichier `.env` voisin (mode 600) et n’est jamais renvoyé au navigateur. Laissez le champ vide pour conserver le mot de passe actuel.
-- Les identifiants de connexion sont immuables, car catalogues et historique en dépendent. Supprimer une connexion supprime aussi sa source de sauvegarde. Une connexion possède au plus une source de sauvegarde.
+- Les identifiants de connexion sont immuables, car catalogues et historique en dépendent. Supprimer une connexion supprime aussi sa source de sauvegarde ; la dernière connexion peut aussi être supprimée (l’application démarre alors vide). Une connexion possède au plus une source de sauvegarde.
 - `allowed_db_hosts`, les commandes de restauration et les chemins de dump locaux sont affichés mais ne se modifient que dans le fichier : une requête web ne doit jamais pouvoir choisir un hôte hors liste, une commande shell ou un fichier à écraser.
-- **Appliquer et redémarrer** relance le serveur sur place dès qu’aucune transaction, requête ni tâche de maintenance n’est en cours. Sous Linux et macOS, l’identifiant de processus reste le même, les lanceurs continuent donc de le suivre ; sous Windows, un nouveau processus serveur démarre dans la même console et l’ancien s’arrête.
+- **Appliquer et redémarrer** relance le serveur sur place ; c’est refusé, avec un message, tant qu’une transaction, une requête ou une tâche de maintenance est en cours. Sous Linux et macOS, l’identifiant de processus reste le même, les lanceurs continuent donc de le suivre ; sous Windows, un nouveau processus serveur démarre dans la même console et l’ancien s’arrête. La fenêtre de l’application de bureau se ferme puis se rouvre.
 
 L’API de paramétrage expose cette relation via `connections[].backup` (ou `null`) ; la liste à plat `dumpSources` reste disponible pour compatibilité.
 
@@ -258,6 +290,7 @@ Dans un conteneur, `127.0.0.1` désigne le conteneur lui-même. Sous Linux, util
 - L’écoute par défaut se fait sur localhost. `0.0.0.0` existe pour les conteneurs ; ne publiez le port que sur localhost.
 - Le serveur vérifie l’en-tête HTTP `Host` et exige `X-DB-Atlas: 1` sur les requêtes POST pour limiter le DNS rebinding et les requêtes cross-origin.
 - Il n’y a **ni authentification ni TLS** : ne l’exposez jamais à Internet ou à un réseau non fiable.
+- Les mises à jour ne s’installent qu’après un clic dans l’interface, depuis les versions GitHub du projet, et seulement si la somme SHA-256 du fichier correspond au `SHA256SUMS` de la version. `ATLAS_NO_UPDATE_CHECK=1` désactive cette vérification, la seule requête d’Atlas en dehors de vos bases et sources de sauvegarde configurées.
 - Seuls l’interface embarquée et les fichiers de catalogue générés sont servis. Hôtes, utilisateurs et mots de passe n’atteignent jamais le navigateur via la configuration publique, et les messages d’erreur comme les journaux de tâches sont expurgés.
 
 ## Développement
@@ -271,6 +304,21 @@ npm run dev --prefix frontend                        # terminal 2, Vite relaie l
 
 - Compilez le frontend avant `go build` : le binaire embarque `web/dist/app`.
 - `frontend/openapi.json` est le contrat HTTP. Modifiez-le avec les handlers Go, lancez `npm run api:generate --prefix frontend` et committez les deux. Les tests Go échouent si une route du contrat n’est pas servie ou si un champ de réponse n’est pas déclaré.
+
+### Application de bureau et publication
+
+L’application de bureau est le même binaire compilé avec l’étiquette `desktop` : elle démarre le serveur local puis l’affiche dans une fenêtre [Wails](https://wails.io) (WebView2 sous Windows, WebKitGTK 4.1 sous Linux). La compilation par défaut reste le simple serveur.
+
+```sh
+go build -tags desktop,production,webkit2_41 ./cmd/atlas-schema-desk     # Linux : nécessite libgtk-3-dev et libwebkit2gtk-4.1-dev
+GOOS=windows go build -tags desktop,production -ldflags -H=windowsgui ./cmd/atlas-schema-desk
+scripts/desktop_smoke.sh      # Docker : compile, démarre depuis un profil vide sous Xvfb, capture d’écran, installe une fausse mise à jour
+scripts/release.sh 1.2.3      # tous les fichiers de la version dans dist/ (Linux ; nécessite l’interface compilée, gcc, libgtk-3-dev, libwebkit2gtk-4.1-dev, nsis, zip, et le réseau pour go-winres sauf SKIP_WINRES=1)
+scripts/test_get_matrix.sh dist   # get.sh + fenêtre sous Ubuntu 22.04/24.04, Debian 12/13, Fedora, Arch, openSUSE (Docker)
+scripts/local_install.sh      # installe cette copie de travail sur votre machine via get.sh, comme un utilisateur
+```
+
+Pousser une étiquette `vX.Y.Z` lance `.github/workflows/release.yml` : il fabrique les fichiers avec `scripts/release.sh` sous Ubuntu 22.04 (la glibc la plus ancienne prise en charge), lance `scripts/test_get_matrix.sh` sur sept distributions Linux, installe l’application sur une machine Windows, ouvre sa fenêtre, déroule une mise à jour intégrée complète puis la désinstalle, puis publie la version GitHub qu’utilisent la mise à jour intégrée et `get.sh`. Les noms des fichiers sont fixes (`atlas-schema-desk_linux_amd64.tar.gz`, `atlas-schema-desk_windows_amd64_setup.exe`, `SHA256SUMS`), car la mise à jour les cherche par leur nom.
 
 ### Tests
 

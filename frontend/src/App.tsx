@@ -25,6 +25,7 @@ import { Explorer, ProgramDetail } from "./Exploration";
 import { Maintenance } from "./Maintenance";
 import { Navigation } from "./Navigation";
 import { Icon } from "./Icon";
+import { UpdateBanner } from "./UpdateBanner";
 
 function sqlReducer(
   state: Record<string, SqlState>,
@@ -350,9 +351,7 @@ export function App() {
             <Icon name={navigationOpen ? "close" : "menu"} />
           </button>
           <a className="brand" href="#/">
-            <span className="brand-mark" aria-hidden="true">
-              <Icon name="database" />
-            </span>
+            <span className="brand-mark" aria-hidden="true" />
             <div>
               <h1 className="brand-name">Atlas Schema Desk</h1>
               <p className="brand-subtitle">Votre espace de données</p>
@@ -404,6 +403,7 @@ export function App() {
             </button>
           </div>
         </header>
+        <UpdateBanner />
         {(expired ||
           (session.data && session.data.expiresInSeconds <= 300)) && (
           <div className="session-warning" role="alert">

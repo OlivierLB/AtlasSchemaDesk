@@ -22,6 +22,7 @@ import (
 	"github.com/OlivierLB/AtlasSchemaDesk/internal/jobs"
 	"github.com/OlivierLB/AtlasSchemaDesk/internal/sessions"
 	"github.com/OlivierLB/AtlasSchemaDesk/internal/settings"
+	"github.com/OlivierLB/AtlasSchemaDesk/internal/update"
 )
 
 const maxBody = 1 << 20
@@ -39,6 +40,10 @@ type App struct {
 	// Restart receives a request to re-execute the server with the saved
 	// configuration; nil disables the feature.
 	Restart chan struct{}
+	// Quit asks the application to exit (the Windows installer relaunches it).
+	Quit chan struct{}
+	// Updates checks releases; nil in development builds and tests.
+	Updates *update.Updater
 	web     fs.FS
 	command []string
 	// newExecutor adapts a session worker; replaced in tests.
@@ -142,6 +147,7 @@ func (a *App) Handler() http.Handler {
 		return http.StatusOK, a.Config.Public(), nil
 	})
 	a.registerSettings(api)
+	a.registerUpdates(api)
 	api("GET /api/events/reference", func(r *http.Request, _ []byte) (int, any, error) {
 		zone := r.URL.Query().Get("timeZone")
 		if zone == "" {

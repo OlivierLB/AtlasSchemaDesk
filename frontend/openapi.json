@@ -724,6 +724,36 @@
         "title": "RestartResponse",
         "type": "object"
       },
+      "UpdateStatus": {
+        "additionalProperties": false,
+        "properties": {
+          "available": {
+            "type": "boolean"
+          },
+          "canInstall": {
+            "type": "boolean"
+          },
+          "current": {
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          },
+          "latest": {
+            "type": "string"
+          },
+          "page": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "current",
+          "available",
+          "canInstall"
+        ],
+        "title": "UpdateStatus",
+        "type": "object"
+      },
       "RowsRequest": {
         "additionalProperties": false,
         "properties": {
@@ -2117,6 +2147,42 @@
           }
         },
         "summary": "restart"
+      }
+    },
+    "/api/update": {
+      "get": {
+        "operationId": "update_status",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Latest release compared with the running version"
+      }
+    },
+    "/api/update/install": {
+      "post": {
+        "operationId": "update_install",
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestartResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Download, verify and install the latest release, then restart"
       }
     },
     "/api/s3/refresh": {

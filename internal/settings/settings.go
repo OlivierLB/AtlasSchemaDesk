@@ -181,9 +181,6 @@ func (s *Store) DeleteConnection(id string) error {
 	if index < 0 {
 		return invalid("connexion inconnue : %s", id)
 	}
-	if len(connections) == 1 {
-		return invalid("au moins une connexion doit rester configurée")
-	}
 	raw["connections"] = append(connections[:index], connections[index+1:]...)
 	sources := tables(raw, "dump_sources")
 	if at := find(sources, "connection", id); at >= 0 {

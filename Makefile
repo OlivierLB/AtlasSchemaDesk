@@ -17,7 +17,7 @@ build:
 
 vet:
 	$(GO) vet ./...
-	unformatted=$$("$$($(GO) env GOROOT)/bin/gofmt" -l cmd internal web) && test -z "$$unformatted" || { echo "gofmt: $$unformatted"; exit 1; }
+	unformatted=$$("$$($(GO) env GOROOT)/bin/gofmt" -l cmd internal web packaging) && test -z "$$unformatted" || { echo "gofmt: $$unformatted"; exit 1; }
 
 test: vet
 	$(GO) test -race ./...

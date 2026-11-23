@@ -35,6 +35,7 @@ func shellCommand(command string) *exec.Cmd {
 		shell = filepath.Join(os.Getenv("SystemRoot"), "System32", "cmd.exe")
 	}
 	cmd := exec.Command(shell)
-	cmd.SysProcAttr = &syscall.SysProcAttr{CmdLine: `"` + shell + `" /d /s /c "` + command + `"`}
+	// CREATE_NO_WINDOW: the desktop app has no console to lend to cmd.exe.
+	cmd.SysProcAttr = &syscall.SysProcAttr{CmdLine: `"` + shell + `" /d /s /c "` + command + `"`, CreationFlags: 0x08000000}
 	return cmd
 }

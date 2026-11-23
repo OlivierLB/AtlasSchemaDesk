@@ -5,6 +5,7 @@ export type Connection = components["schemas"]["ConnectionPublic"];
 export type Session = components["schemas"]["SessionStatus"];
 export type NewSession = components["schemas"]["NewSession"];
 export type Job = components["schemas"]["JobStatus"];
+export type UpdateStatus = components["schemas"]["UpdateStatus"];
 export type Status = components["schemas"]["Status"];
 export type SqlResponse = components["schemas"]["SqlResponse"];
 export type RowsResponse = components["schemas"]["RowsResponse"];

@@ -26,6 +26,14 @@ jobs:
       - run: make vet
       - name: Windows cross-compilation
         run: GOOS=windows GOARCH=amd64 go vet ./...
+      - name: Desktop app builds (Linux WebKitGTK, Windows WebView2)
+        run: |
+          sudo apt-get update && sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev nsis zip
+          go vet -tags desktop,production,webkit2_41 ./...
+          GOOS=windows GOARCH=amd64 go vet -tags desktop,production ./...
+      - name: Release files build (desktop apps, Windows installer, servers)
+        run: SKIP_WINRES=1 scripts/release.sh 0.0.0 "$RUNNER_TEMP/dist"
+      - run: for script in get.sh scripts/release.sh scripts/test_get_matrix.sh scripts/local_install.sh scripts/desktop_smoke.sh; do bash -n "$script"; done
       - name: Installer reuses the toolchains and builds
         run: ./install.sh --non-interactive
       - run: pip install -r tests/requirements.txt && python -m playwright install --with-deps firefox

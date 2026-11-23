@@ -304,9 +304,6 @@ func Load(path string, environ map[string]string) (*Config, error) {
 		ids[conn.ID] = true
 		cfg.Connections = append(cfg.Connections, conn)
 	}
-	if len(cfg.Connections) == 0 {
-		return nil, errors.New("configure at least one connection")
-	}
 	if cfg.Routines, err = routines(raw, dir, cfg.Connections, ids); err != nil {
 		return nil, err
 	}

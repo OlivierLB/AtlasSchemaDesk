@@ -73,6 +73,18 @@ export function Home() {
           Gérer les connexions
         </a>
       </div>
+      {config.connections.length === 0 && (
+        <div className="empty-state first-run">
+          <h2>Aucune base configurée</h2>
+          <p>
+            Ajoute ta première base PostgreSQL ou MySQL : son adresse, son
+            utilisateur et son mot de passe suffisent.
+          </p>
+          <a className="button primary" href="#/connexions?ajouter=1">
+            + Ajouter une base
+          </a>
+        </div>
+      )}
       <div className="connection-grid">
         {config.connections.map((connection) => {
           const list = tables.filter((t) => t.engine === connection.id);
@@ -169,7 +181,7 @@ export function Home() {
           );
         })}
       </div>
-      {!tables.length && (
+      {!tables.length && config.connections.length > 0 && (
         <div className="empty-guidance">
           <Icon name="database" />
           <div>

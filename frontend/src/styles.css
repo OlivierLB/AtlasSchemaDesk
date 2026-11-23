@@ -100,15 +100,9 @@ select:focus-visible {
 .brand-mark {
   width: 34px;
   height: 34px;
-  justify-content: center;
-  border: 1px solid #3a4d65;
+  flex: none;
   border-radius: 9px;
-  background: #1b2837;
-  color: var(--blue);
-}
-.brand-mark svg {
-  width: 18px;
-  height: 18px;
+  background: #2a142f url("./logo.png") center / cover no-repeat;
 }
 .brand-name {
   margin: 0;
@@ -1668,6 +1662,9 @@ select:focus-visible {
 .table-grid > .empty-state {
   grid-column: 1 / -1;
 }
+.empty-state.first-run {
+  margin: 4px 0 24px;
+}
 .overview-content {
   width: 100%;
   max-width: 1320px;
@@ -3226,6 +3223,22 @@ li.CodeMirror-hint-active {
   color: var(--amber);
   background: var(--panel);
   border-bottom: 1px solid var(--line);
+}
+.update-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--text);
+}
+.update-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.update-error {
+  color: var(--amber);
 }
 .maintenance-panel {
   position: fixed;

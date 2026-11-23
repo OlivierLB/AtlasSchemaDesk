@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Atlas Schema Desk
+Comment=Explorer les schémas, les données et les routines de vos bases PostgreSQL et MySQL
+Exec=atlas-schema-desk
+Icon=atlas-schema-desk
+Terminal=false
+Categories=Development;Database;
+StartupWMClass=atlas-schema-desk

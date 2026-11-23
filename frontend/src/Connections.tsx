@@ -91,6 +91,12 @@ export function Connections() {
   const [busy, setBusy] = useState(false);
   const [restarting, setRestarting] = useState(false);
   const selectedConnection = route.params?.connection;
+  // The home page links here with ?ajouter=1 when no database exists yet.
+  const addRequested = route.params?.ajouter === "1";
+  useEffect(() => {
+    if (addRequested)
+      setConnectionForm({ isNew: true, value: emptyConnection() });
+  }, [addRequested]);
   useEffect(() => {
     if (overview.data && selectedConnection)
       document
@@ -570,7 +576,7 @@ export function Connections() {
                   <button
                     className="button danger"
                     aria-label={`Supprimer la base ${connection.label}`}
-                    disabled={busy || data.connections.length === 1}
+                    disabled={busy}
                     onClick={() => {
                       if (
                         confirm(

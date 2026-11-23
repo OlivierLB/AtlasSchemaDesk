@@ -208,6 +208,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Latest release compared with the running version */
+        get: operations["update_status"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/update/install": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Download, verify and install the latest release, then restart */
+        post: operations["update_install"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/s3/refresh": {
         parameters: {
             query?: never;
@@ -712,6 +746,15 @@ export interface components {
         RestartResponse: {
             /** Restarting */
             restarting: boolean;
+        };
+        /** UpdateStatus */
+        UpdateStatus: {
+            available: boolean;
+            canInstall: boolean;
+            current: string;
+            error?: string;
+            latest?: string;
+            page?: string;
         };
         /** RowsRequest */
         RowsRequest: {
@@ -1472,6 +1515,46 @@ export interface operations {
         };
     };
     restart: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RestartResponse"];
+                };
+            };
+        };
+    };
+    update_status: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UpdateStatus"];
+                };
+            };
+        };
+    };
+    update_install: {
         parameters: {
             query?: never;
             header?: never;

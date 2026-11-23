@@ -1,0 +1,112 @@
+name: Release
+# Pushing a tag vX.Y.Z builds the desktop apps and server binaries, checks the
+# Windows installer on a real Windows host, then publishes the GitHub release
+# that the in-app updater and get.sh download from.
+on:
+  push:
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
+permissions:
+  contents: read
+jobs:
+  build:
+    # The oldest supported glibc (Ubuntu 22.04) keeps the Linux app portable.
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Desktop build dependencies
+        run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev nsis zip
+      - run: npm ci --prefix frontend && npm run build --prefix frontend
+      - run: scripts/release.sh "$GITHUB_REF_NAME" dist
+      - name: get.sh and the Linux app on every supported distribution
+        run: scripts/test_get_matrix.sh dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+  windows:
+    # A real Windows host: silent install, the WebView2 window, a complete
+    # in-app update (fake release served locally), then uninstall.
+    needs: build
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - name: Installer, window, in-app update and uninstaller
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $expected = $env:GITHUB_REF_NAME.TrimStart('v')
+          function Wait-Answer($port, $seconds) {
+            foreach ($i in 1..($seconds * 2)) {
+              try { Invoke-RestMethod "http://localhost:$port/api/config" | Out-Null; return $true } catch { Start-Sleep -Milliseconds 500 }
+            }
+            return $false
+          }
+
+          Start-Process dist\atlas-schema-desk_windows_amd64_setup.exe -ArgumentList '/S' -Wait
+          $app = Join-Path $env:LOCALAPPDATA 'Programs\Atlas Schema Desk\atlas-schema-desk.exe'
+          if (-not (Test-Path $app)) { throw "Not installed: $app" }
+          if (-not (Test-Path (Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Atlas Schema Desk.lnk'))) { throw 'Start menu shortcut missing' }
+          Start-Process $app -ArgumentList 'version' -RedirectStandardOutput version.txt -Wait -NoNewWindow
+          $version = (Get-Content version.txt -Raw).Trim()
+          if ($version -ne $expected) { throw "Unexpected version: $version" }
+
+          # Fake release v99.0.0 carrying this installer, served locally.
+          $fake = New-Item -ItemType Directory fake -Force
+          New-Item -ItemType Directory "$fake\repos\OlivierLB\AtlasSchemaDesk\releases" -Force | Out-Null
+          Copy-Item dist\atlas-schema-desk_windows_amd64_setup.exe, dist\SHA256SUMS $fake
+          $base = 'http://127.0.0.1:9900'
+          Set-Content "$fake\repos\OlivierLB\AtlasSchemaDesk\releases\latest" ('{"tag_name":"v99.0.0","html_url":"' + $base + '/","assets":[' +
+            '{"name":"atlas-schema-desk_windows_amd64_setup.exe","browser_download_url":"' + $base + '/atlas-schema-desk_windows_amd64_setup.exe"},' +
+            '{"name":"SHA256SUMS","browser_download_url":"' + $base + '/SHA256SUMS"}]}')
+          $web = Start-Process python -ArgumentList '-m','http.server','9900','--bind','127.0.0.1','--directory',$fake -PassThru -WindowStyle Hidden
+          $env:ATLAS_UPDATE_API = $base
+
+          # The desktop window (WebView2), not the headless server.
+          $window = Start-Process $app -PassThru
+          if (-not (Wait-Answer 8765 30)) { throw 'The desktop app did not start' }
+          Start-Sleep -Seconds 3
+          if ($window.HasExited) { throw "The window exited (code $($window.ExitCode))" }
+
+          $status = Invoke-RestMethod http://localhost:8765/api/update
+          if (-not $status.canInstall -or $status.latest -ne '99.0.0') { throw "Update not offered: $($status | ConvertTo-Json -Compress)" }
+          Invoke-RestMethod -Method Post http://localhost:8765/api/update/install -Headers @{ 'X-DB-Atlas' = '1' } -ContentType 'application/json' -Body '{}' | Out-Null
+          if (-not $window.WaitForExit(30000)) { throw 'The app did not close for the update' }
+          if (-not (Wait-Answer 8765 90)) { throw 'The app was not relaunched after the silent update' }
+          Write-Output 'In-app update: downloaded, verified, installed silently, relaunched'
+
+          Get-Process atlas-schema-desk -ErrorAction SilentlyContinue | Stop-Process -Force
+          Stop-Process -Id $web.Id -Force
+          Start-Sleep -Seconds 2
+          Start-Process (Join-Path (Split-Path $app) 'uninstall.exe') -ArgumentList '/S' -Wait
+          Start-Sleep -Seconds 3
+          if (Test-Path $app) { throw 'Uninstaller left the application behind' }
+          Write-Output "Windows OK ($version)"
+  publish:
+    needs: [build, windows]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - name: GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" --title "Atlas Schema Desk ${GITHUB_REF_NAME#v}" --generate-notes

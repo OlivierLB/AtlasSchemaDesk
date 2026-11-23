@@ -100,8 +100,12 @@ func TestAddEditAndDeleteConnection(t *testing.T) {
 	if len(cfg.Connections) != 1 || len(cfg.DumpSources) != 0 || cfg.RoutinesFor("library") {
 		t.Fatalf("cascade delete incomplete: %+v", cfg)
 	}
-	if err := s.DeleteConnection("store"); !errors.Is(err, ErrInvalid) {
-		t.Fatalf("last connection deleted: %v", err)
+	// The last connection can go too: the application starts empty.
+	if err := s.DeleteConnection("store"); err != nil {
+		t.Fatal(err)
+	}
+	if cfg = loaded(t, s); len(cfg.Connections) != 0 {
+		t.Fatalf("last connection kept: %+v", cfg.Connections)
 	}
 }
 
