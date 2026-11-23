@@ -2,7 +2,11 @@
 GO ?= $(shell command -v go 2>/dev/null || echo $(HOME)/.local/go/bin/go)
 BINARY := bin/atlas-schema-desk
 
-.PHONY: frontend build vet test integration check clean
+.PHONY: install frontend build vet test integration check clean
+
+# From a fresh clone: toolchains (if missing), build, first connection, check.
+install:
+	./install.sh
 
 frontend:
 	npm ci --prefix frontend

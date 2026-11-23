@@ -17,7 +17,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/OlivierLB/AtlasSchemaDesk/internal/catalog"
@@ -188,11 +187,11 @@ func Apply(cfg *config.Config, connection, version string) error {
 	if err := os.MkdirAll(filepath.Dir(destination), 0o755); err != nil {
 		return err
 	}
-	var stat syscall.Statfs_t
-	if err := syscall.Statfs(filepath.Dir(destination), &stat); err != nil {
+	free, err := freeBytes(filepath.Dir(destination))
+	if err != nil {
 		return err
 	}
-	if int64(stat.Bavail)*int64(stat.Bsize) < item.Size+64*1024*1024 {
+	if free < uint64(item.Size)+64*1024*1024 {
 		return errors.New("not enough free space for the downloaded dump")
 	}
 	file, err := os.CreateTemp(filepath.Dir(destination), fmt.Sprintf(".download-%d-", os.Getpid()))
@@ -214,7 +213,7 @@ func Apply(cfg *config.Config, connection, version string) error {
 	}
 	// Stream progress through the supervisor's pipe; the previous local dump
 	// stays untouched if restoration fails.
-	command := exec.Command("/bin/sh", "-c", source.RestoreCommand)
+	command := shellCommand(source.RestoreCommand)
 	command.Dir = filepath.Dir(cfg.Path)
 	command.Env = append(os.Environ(), "ATLAS_DUMP_PATH="+temporary, "ATLAS_CONNECTION="+connection)
 	command.Stdout, command.Stderr = os.Stdout, os.Stderr

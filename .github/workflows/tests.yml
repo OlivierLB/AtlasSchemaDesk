@@ -24,6 +24,10 @@ jobs:
       - run: npm run api:generate --prefix frontend && git diff --exit-code -- frontend/src/api.generated.ts
       - run: npm run typecheck --prefix frontend && npm run lint --prefix frontend && npm run format:check --prefix frontend && npm test --prefix frontend
       - run: make vet
+      - name: Windows cross-compilation
+        run: GOOS=windows GOARCH=amd64 go vet ./...
+      - name: Installer reuses the toolchains and builds
+        run: ./install.sh --non-interactive
       - run: pip install -r tests/requirements.txt && python -m playwright install --with-deps firefox
       - run: python -m unittest discover -s tests -p test_check_public.py
       - run: python scripts/check_public.py
@@ -32,3 +36,19 @@ jobs:
       - run: python scripts/check_distribution.py bin/atlas-schema-desk
       - run: docker build -t atlas-schema-desk:test .
       - run: python scripts/check_docker.py
+  windows:
+    # install.ps1 from scratch on a real Windows host, with Windows PowerShell 5.1.
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install from scratch
+        shell: powershell
+        run: .\install.ps1 -NonInteractive
+      - name: Binary runs and loads the generated configuration
+        shell: powershell
+        run: |
+          bin\atlas-schema-desk.exe version
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          bin\atlas-schema-desk.exe inspect --config atlas.toml
+          if ($LASTEXITCODE -ne 0) { exit 1 }

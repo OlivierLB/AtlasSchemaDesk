@@ -4,7 +4,7 @@
 
 A local explorer for PostgreSQL and MySQL databases. Browse schemas, tables and foreign keys, inspect stored programs and their impact on tables, read and filter table data, and run SQL in a console with explicit commit and rollback. Optional modules compare routines with a local SQL repository and list or restore database backups.
 
-Atlas Schema Desk is a single Go binary with its React interface embedded. It runs entirely on your machine, without a cloud account or telemetry. PostgreSQL 10+ and MySQL 8 are tested (CI uses PostgreSQL 10, PostgreSQL 18 and MySQL 8.4).
+Atlas Schema Desk is a single Go binary with its React interface embedded. It runs entirely on your machine, on Linux, Windows or macOS, without a cloud account or telemetry. PostgreSQL 10+ and MySQL 8 are tested (CI uses PostgreSQL 10, PostgreSQL 18 and MySQL 8.4).
 
 ## Features
 
@@ -26,15 +26,52 @@ The interface labels are currently in French.
 | --- | --- |
 | Run a built binary | nothing else (drivers and interface are compiled in) |
 | Run the Docker image | Docker |
-| Build from source | Go 1.27+ and Node 22.12+ |
+| Build from source | Go 1.27+ and Node 22.12+ (the installers download them if missing) |
 | Browser and integration tests | Python 3, Playwright with Firefox, Docker Compose |
-| S3 backup sources | AWS CLI, installed and configured separately |
+| S3 backup sources | AWS CLI (installed by the installer when an S3 source is configured; credentials configured separately) |
 
 ## Quick start
+
+Linux and macOS:
 
 ```sh
 git clone https://github.com/OlivierLB/AtlasSchemaDesk.git
 cd AtlasSchemaDesk
+./install.sh                 # or: make install
+```
+
+Windows (PowerShell or Command Prompt, no administrator rights needed):
+
+```powershell
+git clone https://github.com/OlivierLB/AtlasSchemaDesk.git
+cd AtlasSchemaDesk
+.\install.cmd                # or double-click install.cmd in Explorer
+```
+
+`install.cmd` runs `install.ps1` without changing the PowerShell execution policy; both work with the Windows PowerShell 5.1 shipped with Windows 10 and 11. Without Git, download the repository as a ZIP from GitHub and run the installer from the extracted folder.
+
+The installer sets up everything Atlas needs to **run** (nothing for development) and can be run again at any time; every step skips what is already in place:
+
+1. **Go and Node** (needed to build only): reused from your `PATH` (or `~/.local/go`) when recent enough, otherwise the official archives are downloaded, their SHA-256 checksums verified, and unpacked into `~/.local/atlas-toolchain` (Windows: `%LOCALAPPDATA%\atlas-toolchain`; override with `ATLAS_TOOLCHAIN_DIR`). No administrator rights; your shell profile and `PATH` are not modified.
+2. **System tools** (Linux and macOS): `curl`, `tar`, `gzip` and CA certificates are installed with the system package manager (apt, dnf, yum, pacman, zypper, apk or Homebrew) if missing. On Alpine and other musl systems, Node comes from the system package (22.12+ required, Alpine 3.21 or later). Windows needs nothing extra.
+3. **Build**: the interface, then the binary `bin/atlas-schema-desk` (`.exe` on Windows), skipped when the binary is newer than every source (`--rebuild` / `-Rebuild` forces it).
+4. **First connection**: if `atlas.toml` does not exist, the installer asks for a database (type, host, port, name, user, password) and writes `atlas.toml`, plus the password into `.env` (mode 600 on Linux and macOS). Existing files are never overwritten; add other connections later on the **Connexions** page.
+5. **Backup tools**: when the configuration declares backup sources, the tools they use are installed too: the AWS CLI for S3 sources, and `psql`, `mysql` or decompressors named in `restore_command` (system package manager on Linux and macOS, `winget` on Windows). After adding a backup source in the interface, run the installer again. Configure S3 credentials yourself (`aws configure` or your usual profile).
+6. **Check**: every connection is tested read-only (`atlas-schema-desk check`), then the installer offers to start the server (`--start` / `-Start` starts it without asking).
+
+System packages and `winget` installs are shown and confirmed before running; they may ask for your `sudo` password. `--yes` / `-Yes` accepts them without asking. `--non-interactive` / `-NonInteractive` never prompts: it copies the example configuration for you to edit, then you run the installer again.
+
+| Option | `install.sh` | `install.ps1` / `install.cmd` |
+| --- | --- | --- |
+| Start the server at the end | `--start` | `-Start` |
+| Force a rebuild | `--rebuild` | `-Rebuild` |
+| Install missing packages without asking | `--yes` | `-Yes` |
+| Never prompt | `--non-interactive` | `-NonInteractive` |
+| Prompt even with redirected input | `--configure` | `-Configure` |
+
+### Manual installation
+
+```sh
 make frontend build          # npm ci + Vite build, then go build into bin/
 cp atlas.example.toml atlas.toml
 cp .env.example .env
@@ -119,7 +156,7 @@ allow_writes = false
 - A password typed in the form is written to the sibling `.env` file (mode 600) and is never sent back to the browser. Leave it empty to keep the current one.
 - Connection IDs are immutable because catalogs and history are keyed by them. Deleting a connection also deletes its backup source. A connection owns at most one backup source.
 - `allowed_db_hosts`, restore commands and local dump paths are displayed but can only be changed in the file: a web request must never choose a host outside the allowlist, a shell command or a file to overwrite.
-- **Appliquer et redémarrer** re-executes the server in place (same process ID, so launchers keep tracking it) once no transaction, request or maintenance job is running.
+- **Appliquer et redémarrer** re-executes the server in place once no transaction, request or maintenance job is running. On Linux and macOS the process ID stays the same, so launchers keep tracking it; on Windows a new server process starts in the same console and the old one exits.
 
 The settings API exposes the relationship as `connections[].backup` (or `null`); the flat `dumpSources` list remains for compatibility.
 
@@ -193,13 +230,15 @@ local_path = ".local/dumps/library.sql.gz"
 restore_command = 'gzip -dc "$ATLAS_DUMP_PATH" | psql --dbname=pagila'
 ```
 
-S3 source: use `type = "s3-versioned"` with `bucket` and `key` instead of `path` and `pattern`. Only versions of that exact key are offered, and AWS CLI pagination is followed. Install and configure the AWS CLI separately.
+S3 source: use `type = "s3-versioned"` with `bucket` and `key` instead of `path` and `pattern`. Only versions of that exact key are offered, and AWS CLI pagination is followed. The installer installs the AWS CLI when such a source is configured; configure its credentials yourself.
 
 Set `[server].refresh_dumps_on_start = false` to load the local backup cache at startup and list remote backups only when you refresh them in the interface. This setting never triggers a restore. Nothing is downloaded or restored until requested. The backup and routine-source features stay hidden when their modules are not configured.
 
 **Restoration replaces the database contents.** `restore_command` is a trusted shell command from your local configuration and runs with your user privileges. The temporary download path is passed in `ATLAS_DUMP_PATH` and the connection ID in `ATLAS_CONNECTION`. The command must read that file and exit non-zero on failure. No command supplied by a request is ever executed.
 
-Before restoring, free disk space and size are checked; the previous local dump is kept until the restore succeeds; open transactions or active requests block the restore. A failed or cancelled command can still leave a partially restored database: this is not a backup system nor an atomic restore. Process-tree cancellation is supported on Linux and in the Docker image.
+On Linux and macOS the command runs through `/bin/sh`. On Windows it runs through `cmd.exe`, so variables are written `%ATLAS_DUMP_PATH%`, for example `restore_command = 'psql --dbname=pagila --file="%ATLAS_DUMP_PATH%"'` for an uncompressed dump; Windows has no `gzip` by default.
+
+Before restoring, free disk space and size are checked; the previous local dump is kept until the restore succeeds; open transactions or active requests block the restore. A failed or cancelled command can still leave a partially restored database: this is not a backup system nor an atomic restore. Cancellation stops the whole process tree: through process groups on Linux, macOS and in the Docker image, and through `taskkill /T` on Windows.
 
 ## Docker
 

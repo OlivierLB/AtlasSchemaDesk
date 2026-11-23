@@ -4,7 +4,7 @@
 
 Un explorateur local pour bases PostgreSQL et MySQL. Parcourez schémas, tables et clés étrangères, examinez les programmes stockés et leur impact sur les tables, lisez et filtrez les données, et exécutez du SQL dans une console avec validation et annulation explicites. Des modules optionnels comparent les routines à un dépôt SQL local et listent ou restaurent des sauvegardes.
 
-Atlas Schema Desk est un binaire Go unique qui embarque son interface React. Il tourne entièrement sur votre machine, sans compte cloud ni télémétrie. PostgreSQL 10+ et MySQL 8 sont testés (la CI utilise PostgreSQL 10, PostgreSQL 18 et MySQL 8.4).
+Atlas Schema Desk est un binaire Go unique qui embarque son interface React. Il tourne entièrement sur votre machine, sous Linux, Windows ou macOS, sans compte cloud ni télémétrie. PostgreSQL 10+ et MySQL 8 sont testés (la CI utilise PostgreSQL 10, PostgreSQL 18 et MySQL 8.4).
 
 ## Fonctionnalités
 
@@ -26,15 +26,52 @@ Les libellés de l’interface sont actuellement en français.
 | --- | --- |
 | Lancer un binaire compilé | rien d’autre (pilotes et interface sont intégrés) |
 | Lancer l’image Docker | Docker |
-| Compiler depuis les sources | Go 1.27+ et Node 22.12+ |
+| Compiler depuis les sources | Go 1.27+ et Node 22.12+ (les installeurs les téléchargent s’ils manquent) |
 | Tests navigateur et d’intégration | Python 3, Playwright avec Firefox, Docker Compose |
-| Sources de sauvegarde S3 | AWS CLI, installée et configurée à part |
+| Sources de sauvegarde S3 | AWS CLI (installée par l’installeur si une source S3 est configurée ; accès configurés à part) |
 
 ## Démarrage rapide
+
+Linux et macOS :
 
 ```sh
 git clone https://github.com/OlivierLB/AtlasSchemaDesk.git
 cd AtlasSchemaDesk
+./install.sh                 # ou : make install
+```
+
+Windows (PowerShell ou invite de commandes, sans droits administrateur) :
+
+```powershell
+git clone https://github.com/OlivierLB/AtlasSchemaDesk.git
+cd AtlasSchemaDesk
+.\install.cmd                # ou double-clic sur install.cmd dans l’Explorateur
+```
+
+`install.cmd` lance `install.ps1` sans modifier la stratégie d’exécution PowerShell ; les deux fonctionnent avec le Windows PowerShell 5.1 fourni avec Windows 10 et 11. Sans Git, téléchargez le dépôt en ZIP depuis GitHub et lancez l’installeur depuis le dossier extrait.
+
+L’installeur met en place tout ce qu’il faut pour **faire tourner** Atlas (rien pour le développement) et peut être relancé à tout moment ; chaque étape saute ce qui est déjà en place :
+
+1. **Go et Node** (utiles seulement pour compiler) : réutilisés depuis le `PATH` (ou `~/.local/go`) s’ils sont assez récents ; sinon les archives officielles sont téléchargées, leur somme SHA-256 vérifiée, puis décompressées dans `~/.local/atlas-toolchain` (Windows : `%LOCALAPPDATA%\atlas-toolchain` ; modifiable avec `ATLAS_TOOLCHAIN_DIR`). Aucun droit administrateur ; le profil du shell et le `PATH` ne sont pas modifiés.
+2. **Outils système** (Linux et macOS) : `curl`, `tar`, `gzip` et les certificats racine sont installés par le gestionnaire de paquets (apt, dnf, yum, pacman, zypper, apk ou Homebrew) s’ils manquent. Sur Alpine et les autres systèmes musl, Node vient du paquet système (22.12+ requis, Alpine 3.21 ou plus récent). Windows n’a besoin de rien de plus.
+3. **Compilation** : l’interface, puis le binaire `bin/atlas-schema-desk` (`.exe` sous Windows), sautée si le binaire est plus récent que toutes les sources (`--rebuild` / `-Rebuild` la force).
+4. **Première connexion** : si `atlas.toml` n’existe pas, l’installeur demande une base (type, hôte, port, nom, utilisateur, mot de passe) et écrit `atlas.toml`, ainsi que le mot de passe dans `.env` (droits 600 sous Linux et macOS). Les fichiers existants ne sont jamais écrasés ; ajoutez les autres connexions ensuite depuis la page **Connexions**.
+5. **Outils des sauvegardes** : si la configuration déclare des sources de sauvegarde, les outils qu’elles utilisent sont installés aussi : l’AWS CLI pour les sources S3, et `psql`, `mysql` ou les décompresseurs cités dans `restore_command` (gestionnaire de paquets sous Linux et macOS, `winget` sous Windows). Après avoir ajouté une source de sauvegarde dans l’interface, relancez l’installeur. Configurez vous-même les accès S3 (`aws configure` ou votre profil habituel).
+6. **Vérification** : chaque connexion est testée en lecture seule (`atlas-schema-desk check`), puis l’installeur propose de démarrer le serveur (`--start` / `-Start` le démarre sans demander).
+
+Les installations de paquets système et `winget` sont affichées et confirmées avant exécution ; elles peuvent demander votre mot de passe `sudo`. `--yes` / `-Yes` les accepte sans demander. `--non-interactive` / `-NonInteractive` ne pose aucune question : il copie la configuration d’exemple à compléter, puis on relance l’installeur.
+
+| Option | `install.sh` | `install.ps1` / `install.cmd` |
+| --- | --- | --- |
+| Démarrer le serveur à la fin | `--start` | `-Start` |
+| Forcer la compilation | `--rebuild` | `-Rebuild` |
+| Installer les paquets manquants sans demander | `--yes` | `-Yes` |
+| Ne jamais poser de question | `--non-interactive` | `-NonInteractive` |
+| Poser les questions même avec une entrée redirigée | `--configure` | `-Configure` |
+
+### Installation manuelle
+
+```sh
 make frontend build          # npm ci + build Vite, puis go build dans bin/
 cp atlas.example.toml atlas.toml
 cp .env.example .env
@@ -119,7 +156,7 @@ allow_writes = false
 - Un mot de passe saisi dans le formulaire est écrit dans le fichier `.env` voisin (mode 600) et n’est jamais renvoyé au navigateur. Laissez le champ vide pour conserver le mot de passe actuel.
 - Les identifiants de connexion sont immuables, car catalogues et historique en dépendent. Supprimer une connexion supprime aussi sa source de sauvegarde. Une connexion possède au plus une source de sauvegarde.
 - `allowed_db_hosts`, les commandes de restauration et les chemins de dump locaux sont affichés mais ne se modifient que dans le fichier : une requête web ne doit jamais pouvoir choisir un hôte hors liste, une commande shell ou un fichier à écraser.
-- **Appliquer et redémarrer** relance le serveur sur place (même identifiant de processus, les lanceurs continuent donc de le suivre) dès qu’aucune transaction, requête ni tâche de maintenance n’est en cours.
+- **Appliquer et redémarrer** relance le serveur sur place dès qu’aucune transaction, requête ni tâche de maintenance n’est en cours. Sous Linux et macOS, l’identifiant de processus reste le même, les lanceurs continuent donc de le suivre ; sous Windows, un nouveau processus serveur démarre dans la même console et l’ancien s’arrête.
 
 L’API de paramétrage expose cette relation via `connections[].backup` (ou `null`) ; la liste à plat `dumpSources` reste disponible pour compatibilité.
 
@@ -193,13 +230,15 @@ local_path = ".local/dumps/library.sql.gz"
 restore_command = 'gzip -dc "$ATLAS_DUMP_PATH" | psql --dbname=pagila'
 ```
 
-Source S3 : utilisez `type = "s3-versioned"` avec `bucket` et `key` à la place de `path` et `pattern`. Seules les versions de cette clé exacte sont proposées, et la pagination de l’AWS CLI est suivie. Installez et configurez l’AWS CLI séparément.
+Source S3 : utilisez `type = "s3-versioned"` avec `bucket` et `key` à la place de `path` et `pattern`. Seules les versions de cette clé exacte sont proposées, et la pagination de l’AWS CLI est suivie. L’installeur installe l’AWS CLI quand une telle source est configurée ; configurez vous-même ses accès.
 
 Avec `[server].refresh_dumps_on_start = false`, le cache local des sauvegardes est chargé au démarrage et la liste distante n’est interrogée que lorsque vous l’actualisez dans l’interface. Ce réglage ne déclenche jamais de restauration. Rien n’est téléchargé ni restauré sans demande. Les fonctions de sauvegarde et de sources de routines restent masquées tant que leur module n’est pas configuré.
 
 **La restauration remplace le contenu de la base.** `restore_command` est une commande shell de confiance issue de votre configuration locale, exécutée avec vos droits utilisateur. Le chemin du fichier téléchargé est transmis dans `ATLAS_DUMP_PATH` et l’identifiant de connexion dans `ATLAS_CONNECTION`. La commande doit lire ce fichier et renvoyer un code non nul en cas d’échec. Aucune commande fournie par une requête n’est jamais exécutée.
 
-Avant restauration, l’espace disque libre et la taille sont vérifiés ; le dump local précédent est conservé jusqu’à la réussite ; une transaction ouverte ou une requête active bloque la restauration. Une commande échouée ou annulée peut néanmoins laisser une base partiellement restaurée : ce n’est ni un système de sauvegarde ni une restauration atomique. L’annulation de l’arbre de processus est prise en charge sous Linux et dans l’image Docker.
+Sous Linux et macOS, la commande passe par `/bin/sh`. Sous Windows, elle passe par `cmd.exe` : les variables s’écrivent `%ATLAS_DUMP_PATH%`, par exemple `restore_command = 'psql --dbname=pagila --file="%ATLAS_DUMP_PATH%"'` pour un dump non compressé ; Windows n’a pas `gzip` par défaut.
+
+Avant restauration, l’espace disque libre et la taille sont vérifiés ; le dump local précédent est conservé jusqu’à la réussite ; une transaction ouverte ou une requête active bloque la restauration. Une commande échouée ou annulée peut néanmoins laisser une base partiellement restaurée : ce n’est ni un système de sauvegarde ni une restauration atomique. L’annulation arrête tout l’arbre de processus : par groupe de processus sous Linux, macOS et dans l’image Docker, et via `taskkill /T` sous Windows.
 
 ## Docker
 

@@ -12,7 +12,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"sync"
-	"syscall"
 	"time"
 	"unicode/utf8"
 
@@ -203,26 +202,6 @@ func (r *Runner) note(text string) {
 	r.appendText(text)
 }
 
-func signalGroup(pid int, sig syscall.Signal) {
-	_ = syscall.Kill(-pid, sig)
-}
-
-func groupAlive(pid int) bool {
-	return syscall.Kill(-pid, 0) == nil
-}
-
-// stop terminates the whole process group with a grace period.
-func stop(pid int, exited <-chan struct{}) {
-	signalGroup(pid, syscall.SIGTERM)
-	deadline := time.Now().Add(5 * time.Second)
-	// Give descendants the same grace period even if their parent exits early.
-	for time.Now().Before(deadline) && groupAlive(pid) {
-		time.Sleep(50 * time.Millisecond)
-	}
-	signalGroup(pid, syscall.SIGKILL)
-	<-exited
-}
-
 func (r *Runner) run(command []string, onDone func(), cancelled, done chan struct{}) {
 	started := time.Now()
 	outcome, code := "error", -1
@@ -255,7 +234,7 @@ func (r *Runner) run(command []string, onDone func(), cancelled, done chan struc
 	process.Dir = filepath.Dir(r.config.Path)
 	process.Stdin = nil
 	process.Stdout, process.Stderr = writer, writer
-	process.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	isolate(process)
 	if err := process.Start(); err != nil {
 		_ = reader.Close()
 		_ = writer.Close()
@@ -318,14 +297,6 @@ func (r *Runner) run(command []string, onDone func(), cancelled, done chan struc
 		r.note("\nChild processes did not exit cleanly.\n")
 	}
 	_ = reader.Close()
-}
-
-// exitCode mirrors Python's Popen.returncode: -N when killed by signal N.
-func exitCode(state *os.ProcessState) int {
-	if status, ok := state.Sys().(syscall.WaitStatus); ok && status.Signaled() {
-		return -int(status.Signal())
-	}
-	return state.ExitCode()
 }
 
 // cleanupRestore removes the partial download of an interrupted restore.

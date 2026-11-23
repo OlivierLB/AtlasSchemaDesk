@@ -206,11 +206,11 @@ func serve(cfg *config.Config, stderr io.Writer) int {
 	close(stop)
 	app.Close()
 	if restart {
-		// Same PID, start time and arguments: the olb launcher still recognises
-		// the process; the new image reads the saved configuration.
-		err := syscall.Exec(executable, os.Args, os.Environ())
-		fmt.Fprintf(stderr, "atlas-schema-desk: restart failed: %v\n", err)
-		return 1
+		// The new process reads the saved configuration (see restart_*.go).
+		if err := restartProcess(executable); err != nil {
+			fmt.Fprintf(stderr, "atlas-schema-desk: restart failed: %v\n", err)
+			return 1
+		}
 	}
 	return code
 }

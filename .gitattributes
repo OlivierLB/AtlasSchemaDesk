@@ -1,0 +1,4 @@
+# Windows batch files need CRLF; shell scripts must keep LF even on Windows checkouts.
+*.cmd text eol=crlf
+*.sh text eol=lf
+*.ps1 text
