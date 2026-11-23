@@ -16,10 +16,10 @@ export function makeEventWindow(
     !/^\d{4}-\d{2}-\d{2}$/.test(date) ||
     (!wholeDay && (!/^\d{2}:\d{2}$/.test(start) || !/^\d{2}:\d{2}$/.test(end)))
   )
-    throw new Error("Renseigne un jour et deux heures valides.");
+    throw new Error("La date et les heures doivent être valides.");
   const [year, month, day] = date.split("-").map(Number);
   if (year < 1970 || year > 9999)
-    throw new Error("Choisis une année entre 1970 et 9999.");
+    throw new Error("L’année doit être comprise entre 1970 et 9999.");
   const parse = (clock: string, nextDay = false) => {
     const [hour, minute] = clock.split(":").map(Number);
     if (hour > 23 || minute > 59)

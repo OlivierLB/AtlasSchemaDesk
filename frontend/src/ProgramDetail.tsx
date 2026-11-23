@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useAtlas } from "./context";
 import { tableHref } from "./model";
-import type { Program } from "./model";
+import type { Program, Programs } from "./model";
 import { Icon } from "./Icon";
 
 const impactLabels = {
@@ -17,9 +17,11 @@ const impactLabels = {
 export function ProgramDetail({
   program,
   close,
+  catalog,
 }: {
   program: Program;
   close: () => void;
+  catalog?: Programs;
 }) {
   const { programs, tables, config, openProgram, notice } = useAtlas();
   const [tab, setTab] = useState("code");
@@ -35,8 +37,11 @@ export function ProgramDetail({
   }, [program.id]);
   const engine = program.id.split(":")[0];
   const owner =
-    config.connections.find((c) => c.id === engine)?.label || engine;
-  const all = Object.values(programs?.engines || {}).flatMap((s) => s.programs);
+    config.connections.find((c) => c.id === engine)?.label ||
+    (engine === "reference" ? "Sources SQL" : engine);
+  const all = Object.values((catalog || programs)?.engines || {}).flatMap(
+    (s) => s.programs,
+  );
   const groups = Object.entries(impactLabels).flatMap(([key, label]) => {
     const ids = program.impact[key as keyof typeof impactLabels] || [];
     return ids.length ? [{ key, label, ids }] : [];
@@ -160,7 +165,7 @@ export function ProgramDetail({
                     <button
                       className="dependency-link"
                       key={id}
-                      onClick={() => openProgram(target)}
+                      onClick={() => openProgram(target, catalog)}
                     >
                       <Icon name="sql" />
                       <span>

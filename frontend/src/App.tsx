@@ -50,6 +50,7 @@ export function App() {
   const [search, setSearch] = useState("");
   const [selection, setSelection] = useState(0);
   const [program, setProgram] = useState<Program | null>(null);
+  const [programCatalog, setProgramCatalog] = useState<Programs>();
   const [versionsOpen, setVersionsOpen] = useState(false);
   const [selectedVersions, setSelectedVersions] = useState<
     Record<string, string>
@@ -286,8 +287,10 @@ export function App() {
   const openResult = (index: number) => {
     const result = searchResults[index];
     if (!result) return;
-    if (result.program) setProgram(result.program);
-    else location.hash = result.href;
+    if (result.program) {
+      setProgramCatalog(undefined);
+      setProgram(result.program);
+    } else location.hash = result.href;
     setPalette(false);
   };
   const transactionEngines = Object.keys(
@@ -315,7 +318,10 @@ export function App() {
           programs.data?.engines[table.engine]?.tableImpacts[
             `${table.schema}.${table.name}`
           ],
-        openProgram: setProgram,
+        openProgram: (selected, catalog) => {
+          setProgramCatalog(catalog);
+          setProgram(selected);
+        },
         notice: setMessage,
         refreshSession,
       }}
@@ -583,7 +589,11 @@ export function App() {
               className="inspector open"
               aria-label="Fiche du programme"
             >
-              <ProgramDetail program={program} close={() => setProgram(null)} />
+              <ProgramDetail
+                program={program}
+                catalog={programCatalog}
+                close={() => setProgram(null)}
+              />
             </aside>
           )}
         </main>

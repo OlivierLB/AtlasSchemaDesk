@@ -1302,6 +1302,19 @@
             "minimum": 0,
             "maximum": 1440,
             "default": 30
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "local",
+              "reference"
+            ],
+            "default": "local"
+          },
+          "timeZone": {
+            "type": "string",
+            "default": "UTC",
+            "description": "Assumed IANA time zone for SQL sources without an explicit SET time_zone."
           }
         },
         "required": [
@@ -1470,6 +1483,33 @@
           "unknown",
           "excluded",
           "buckets"
+        ]
+      },
+      "EventReferenceCatalog": {
+        "type": "object",
+        "properties": {
+          "generatedAt": {
+            "type": "string"
+          },
+          "engines": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "filesRead": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "generatedAt",
+          "engines",
+          "warnings",
+          "filesRead"
         ]
       }
     }
@@ -2808,6 +2848,33 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/events/reference": {
+      "get": {
+        "summary": "Read event definitions from the configured local SQL repository without database access",
+        "parameters": [
+          {
+            "name": "timeZone",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "UTC"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reference source catalog",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventReferenceCatalog"
                 }
               }
             }

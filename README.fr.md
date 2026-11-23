@@ -190,13 +190,13 @@ La reprise après rechargement utilise l’API Web Locks du navigateur ; un navi
 
 ## Analyser un créneau d’événements
 
-Dans **Événements**, choisis une date et une plage horaire, ou toute la journée, puis **Analyser le créneau**. Le calcul utilise le catalogue local, sans requête vers les bases. Les saisies et résultats utilisent le fuseau du navigateur ; chaque événement est calculé dans son fuseau exporté. Une heure de fin antérieure au début signifie le lendemain.
+Dans **Événements**, le mode **Environnement de référence** lit les fichiers SQL du dépôt configuré, même si la base locale ne contient aucun événement. Choisis le fuseau supposé de cet environnement, puis une date, des heures ou toute une journée et **Analyser le créneau**. La simulation suppose les événements et le planificateur activés, y compris quand le script déclare `DISABLE`. Aucune définition SQL n’est exécutée et aucun catalogue privé n’est enregistré dans le dépôt public.
 
-Les résultats regroupent les lancements prévus, le dernier départ dans la période précédente choisie et les tables touchées par plusieurs événements. Clique sur une barre de la chronologie pour préciser le créneau. Ces éléments sont des pistes d’enquête : ils ne mesurent ni les durées, ni la concurrence réelle, ni l’historique des exécutions et ne prouvent pas une cause de lenteur. Les états du planificateur et des événements sont ceux du dernier export, même pour une date passée.
+Les dates littérales des clauses `STARTS`, `ENDS` et `AT`, ainsi que les intervalles simples sont interprétés. Le fuseau du formulaire sert lorsque le script ne précise pas `SET time_zone`. Les heures de saisie et d’affichage utilisent le fuseau du navigateur. Sans départ explicite, avec une expression de date non prise en charge, un intervalle composite ou un changement d’heure, l’événement reste visible dans les horaires non calculables : son heure de lancement ne peut pas être déduite sans informations supplémentaires sur le déploiement.
 
-Actualise le catalogue après la mise à jour pour charger les horaires structurés. Les métadonnées absentes, fuseaux non résolus, intervalles composites non pris en charge et jours avec changement d’heure sont explicitement signalés comme non calculables. Les événements et planificateurs désactivés sont listés séparément. L’API limite le créneau à sept jours et la période précédente à 24 heures ; les lancements fréquents sont agrégés. Voir la [documentation MySQL des métadonnées d’événements](https://dev.mysql.com/doc/refman/8.4/en/information-schema-events-table.html).
+Le mode **Base locale** conserve l’analyse du dernier catalogue exporté et respecte ses états activé/désactivé. Actualise le catalogue pour obtenir les horaires structurés.
 
-Après compilation du frontend, lance `python tests/ui_event_window.py` dans l’environnement de test pour vérifier cette interface avec des données fictives.
+Les résultats regroupent les départs prévus, ceux juste avant le créneau, les tables partagées et les procédures appelées consultables dans l’inspecteur. Clique sur une barre pour préciser la période. Ce sont des pistes de lenteur : ni les durées, ni les exécutions réelles, ni une cause ne sont prouvées. Une simulation des sources actuelles ne reconstitue pas les anciennes versions déployées. L’API limite les créneaux à sept jours et la période précédente à 24 heures.
 
 ## Modules optionnels
 

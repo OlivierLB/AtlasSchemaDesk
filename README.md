@@ -190,13 +190,13 @@ Reload recovery uses the browser's Web Locks API; browsers without it get a fres
 
 ## Event window investigation
 
-On **Événements**, select a date and time range (or a whole day), then choose **Analyser le créneau**. The projection uses the cached catalog, not a live database query. Inputs and results use the browser's time zone; each event is calculated in its own exported time zone. A finish time before the start crosses midnight.
+On **Événements**, **Environnement de référence** reads the configured local SQL source repository even when the local database contains no events. Choose the assumed environment time zone, a date and time range (or a whole day), then **Analyser le créneau**. This simulation assumes events and their scheduler are enabled, including scripts declaring `DISABLE`. It never executes SQL definitions or persists private source catalogs in the public repository.
 
-Results aggregate scheduled starts, show the latest start within an optional lookback period, and identify tables touched by several candidate events. Click a timeline bar to narrow the window. These are investigation leads, not measured durations, actual concurrency, historical execution records or proof of a slowdown. Event and scheduler states are those observed at the latest export, including for past dates.
+Literal `STARTS`, `ENDS` and `AT` dates and simple intervals are supported. The selected environment time zone applies unless the source sets `time_zone`; input and display times use the browser time zone. Missing deployment anchors, unsupported date expressions, compound intervals and daylight-saving transition days remain explicitly non-calculable.
 
-Refresh the catalog once after upgrading to export structured schedules. Events with missing metadata, unresolved time zones, unsupported compound intervals or a daylight-saving transition on an analyzed date are listed explicitly as non-calculable. Disabled events and disabled schedulers are listed separately. The API caps windows at seven days and lookback at 24 hours, aggregating high-frequency schedules rather than enumerating every execution. See the [MySQL event metadata reference](https://dev.mysql.com/doc/refman/8.4/en/information-schema-events-table.html) for the source fields.
+Switch to **Base locale** to investigate the last exported catalog, respecting its event and scheduler states. Refresh that catalog to obtain structured scheduling metadata.
 
-After building the frontend, run `python tests/ui_event_window.py` in the test environment to check the window UI against synthetic fixtures.
+Results show scheduled starts, preceding starts, shared tables and called procedures available in the inspector. Click a timeline bar to narrow the window. These are investigation leads, not proof of actual execution, duration or cause. Current source files cannot reconstruct previously deployed versions. Windows are limited to seven days and lookback to 24 hours.
 
 ## Optional modules
 

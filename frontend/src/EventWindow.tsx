@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { request } from "./api";
 import { useAtlas } from "./context";
 import { errorText, tableHref } from "./model";
-import type { EventWindowReport, Program } from "./model";
+import type { EventWindowReport, Program, Programs } from "./model";
 import {
   localDate,
   localTime,
@@ -15,10 +15,23 @@ import "./EventWindow.css";
 
 export function EventWindow({
   entries,
+  catalog,
+  source = "local",
+  timeZone = "UTC",
 }: {
   entries: { engine: string; program: Program }[];
+  catalog?: Programs;
+  source?: "reference" | "local";
+  timeZone?: string;
 }) {
-  const { programs, config, openProgram, tables } = useAtlas();
+  const {
+    programs: localPrograms,
+    config,
+    openProgram: open,
+    tables,
+  } = useAtlas();
+  const programs = catalog || localPrograms;
+  const openProgram = (program: Program) => open(program, catalog);
   const now = new Date();
   const [date, setDate] = useState(() => localDate(new Date()));
   const [start, setStart] = useState(
@@ -36,9 +49,19 @@ export function EventWindow({
   } | null>(null);
   const [inputError, setInputError] = useState("");
   const query = useQuery({
-    queryKey: ["event-window", submitted, programs?.generatedAt],
+    queryKey: [
+      "event-window",
+      source,
+      timeZone,
+      submitted,
+      programs?.generatedAt,
+    ],
     queryFn: () =>
-      request<EventWindowReport>("/api/events/window", submitted, false),
+      request<EventWindowReport>(
+        "/api/events/window",
+        { ...submitted, source, timeZone },
+        false,
+      ),
     enabled: submitted !== null,
   });
   const selected = new Map(entries.map((entry) => [entry.program.id, entry]));
@@ -81,11 +104,12 @@ export function EventWindow({
       second: "2-digit",
     });
   const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const incomplete = programs
-    ? config.connections.filter(
-        (c) => !programs.engines[c.id] || programs.engines[c.id]?.error,
-      )
-    : [];
+  const incomplete =
+    programs && source === "local"
+      ? config.connections.filter(
+          (c) => !programs.engines[c.id] || programs.engines[c.id]?.error,
+        )
+      : [];
   const analyze = () => {
     try {
       const window = makeEventWindow(date, start, end, wholeDay);
@@ -100,18 +124,18 @@ export function EventWindow({
     <section className="event-window" aria-label="Analyser un créneau">
       <header className="window-heading">
         <div>
-          <div className="eyebrow">RECHERCHER UNE PISTE DE LENTEUR</div>
-          <h2>Qu’est-ce qui peut tourner à ce moment-là ?</h2>
+          <h2>Analyser une période</h2>
           <p>
-            Retrouve les lancements programmés dans le créneau ou juste avant.
+            Identifiez les événements prévus et les tables sollicitées sur le
+            créneau.
           </p>
         </div>
         <Icon name="activity" />
       </header>
       {incomplete.length > 0 && (
         <div className="info-callout warning">
-          Catalogue incomplet pour {incomplete.map((c) => c.label).join(", ")} :
-          leurs événements ne peuvent pas tous être analysés.
+          Catalogue partiel : {incomplete.map((c) => c.label).join(", ")} :
+          certains événements peuvent manquer.
         </div>
       )}
       <form
@@ -122,7 +146,7 @@ export function EventWindow({
         }}
       >
         <label>
-          Jour
+          Date
           <input
             aria-label="Jour à analyser"
             type="date"
@@ -132,7 +156,7 @@ export function EventWindow({
           />
         </label>
         <label>
-          De
+          Début
           <input
             aria-label="Heure de début"
             type="time"
@@ -143,7 +167,7 @@ export function EventWindow({
           />
         </label>
         <label>
-          À
+          Fin
           <input
             aria-label="Heure de fin"
             type="time"
@@ -162,7 +186,7 @@ export function EventWindow({
           Toute la journée
         </label>
         <label>
-          Démarrages avant le créneau
+          Départs antérieurs
           <select
             aria-label="Inclure les lancements précédents"
             value={lookback}
@@ -173,7 +197,7 @@ export function EventWindow({
                 {minutes === 0
                   ? "Ne pas inclure"
                   : minutes === 1440
-                    ? "Les 24 heures précédentes"
+                    ? "24 heures avant"
                     : `${minutes} minutes avant`}
               </option>
             ))}
@@ -189,7 +213,7 @@ export function EventWindow({
         </button>
       </form>
       <p className="window-timezone">
-        Heures affichées : {zone || "fuseau du navigateur"}.
+        Fuseau d’affichage : {zone || "fuseau du navigateur"}.
         {!wholeDay && end <= start && " La fin est le lendemain."}{" "}
         <button
           className="link-button"
@@ -200,7 +224,7 @@ export function EventWindow({
             setWholeDay(false);
           }}
         >
-          Revenir à maintenant
+          Maintenant
         </button>
       </p>
       {inputError && (
@@ -215,7 +239,8 @@ export function EventWindow({
       )}
       {query.isFetching && (
         <p className="section-help" role="status">
-          Calcul des horaires depuis le catalogue local…
+          Calcul des horaires depuis{" "}
+          {source === "reference" ? "les sources SQL" : "le catalogue local"}…
         </p>
       )}
       {report && (
@@ -226,16 +251,17 @@ export function EventWindow({
                 Du {format(report.from)} au {format(report.to)}
               </h3>
               <p>
-                Selon le catalogue{" "}
+                {source === "reference"
+                  ? "Sources SQL actualisées"
+                  : "Catalogue exporté"}{" "}
                 {report.generatedAt
-                  ? `du ${format(report.generatedAt)}`
+                  ? `le ${format(report.generatedAt)}`
                   : "disponible"}{" "}
-                et les filtres ci-dessus.
+                · {matches.length} événement{matches.length === 1 ? "" : "s"}{" "}
+                identifié{matches.length === 1 ? "" : "s"}.
               </p>
             </div>
-            <span className="state-badge neutral">
-              Projection · pas du temps réel
-            </span>
+            <span className="state-badge neutral">Planification théorique</span>
           </div>
           <div className="window-metrics">
             <div>
@@ -246,24 +272,23 @@ export function EventWindow({
             </div>
             <div>
               <strong>{matches.filter((m) => m.previousAt).length}</strong>
-              <span>départs prévus avant, à vérifier</span>
+              <span>départs antérieurs</span>
             </div>
             <div>
               <strong>{shared.length}</strong>
-              <span>tables partagées</span>
+              <span>tables en commun</span>
             </div>
           </div>
-          <p className="info-callout">
-            Les durées d’exécution ne sont pas connues. Un départ avant le
-            créneau est une piste, pas la preuve qu’une tâche tourne encore. Les
-            états sont ceux du dernier export, même pour une date passée.
+          <p className="window-result-note">
+            Horaires théoriques. Les durées et les exécutions réelles ne sont
+            pas connues.
           </p>
           {buckets.length > 0 && (
             <div className="window-timeline">
               <div className="section-heading">
-                <h3 className="section-title">Concentration des départs</h3>
+                <h3 className="section-title">Répartition des lancements</h3>
                 <span className="section-help">
-                  Cliquer sur une barre pour préciser le créneau
+                  Sélectionnez une période pour affiner l’analyse
                 </span>
               </div>
               <div
@@ -311,8 +336,8 @@ export function EventWindow({
                 <thead>
                   <tr>
                     <th>Événement / base</th>
-                    <th>Départs dans le créneau</th>
-                    <th>Départ prévu avant</th>
+                    <th>Lancements prévus</th>
+                    <th>Dernier départ antérieur</th>
                     <th>Tables concernées</th>
                     <th>
                       <span className="sr-only">Détails</span>
@@ -342,7 +367,10 @@ export function EventWindow({
                           <span className="cell-secondary">
                             {config.connections.find(
                               (c) => c.id === match.engine,
-                            )?.label || match.engine}{" "}
+                            )?.label ||
+                              (match.engine === "reference"
+                                ? "Sources SQL"
+                                : match.engine)}{" "}
                             / {p.schema}
                           </span>
                           <span className="cell-secondary">
@@ -369,7 +397,7 @@ export function EventWindow({
                             </>
                           ) : (
                             <span className="state-badge warning">
-                              Avant le créneau uniquement
+                              Départ antérieur
                             </span>
                           )}
                         </td>
@@ -378,7 +406,7 @@ export function EventWindow({
                             <>
                               <strong>{format(match.previousAt)}</strong>
                               <span className="cell-secondary">
-                                Peut encore tourner · durée inconnue
+                                Durée d’exécution inconnue
                               </span>
                             </>
                           ) : (
@@ -394,7 +422,7 @@ export function EventWindow({
                           </span>
                           {p.impact.dynamicSql && (
                             <span className="cell-secondary">
-                              SQL dynamique : impacts à confirmer
+                              SQL dynamique · impacts à confirmer
                             </span>
                           )}
                         </td>
@@ -415,19 +443,18 @@ export function EventWindow({
             </div>
           ) : (
             <div className="compact-empty">
-              Aucun départ calculable dans ce créneau ou dans la période
-              précédente sélectionnée. Cela n’exclut pas une tâche plus
-              ancienne, une autre charge SQL ou un horaire non calculable.
+              Aucun lancement identifié sur cette période. Consultez les
+              horaires indéterminés ou élargissez le créneau.
             </div>
           )}
           {shared.length > 0 && (
             <section className="window-shared">
               <h3 className="section-title">
-                Tables touchées par plusieurs événements
+                Tables sollicitées par plusieurs événements
               </h3>
               <p className="section-help">
-                Une piste de charge ou de concurrence à examiner ; les horaires
-                ne prouvent pas une exécution simultanée.
+                Les accès à une même table peuvent orienter la recherche de
+                contention. La simultanéité des exécutions reste à vérifier.
               </p>
               {shared.map((group) => {
                 const table = tables.find(
@@ -448,7 +475,10 @@ export function EventWindow({
                       )}
                       <small>
                         {config.connections.find((c) => c.id === group.engine)
-                          ?.label || group.engine}{" "}
+                          ?.label ||
+                          (group.engine === "reference"
+                            ? "Sources SQL"
+                            : group.engine)}{" "}
                         · {group.readers.size} lectures · {group.writers.size}{" "}
                         écritures
                         {group.probable.size
@@ -478,7 +508,8 @@ export function EventWindow({
           {unknown.length > 0 && (
             <details className="window-issues" open>
               <summary>
-                {unknown.length} événement(s) non calculable(s) — à vérifier
+                Horaires indéterminés{" "}
+                <span className="count-badge">{unknown.length}</span>
               </summary>
               {unknown.map((issue) => (
                 <p key={issue.programId}>
@@ -498,7 +529,8 @@ export function EventWindow({
           {excluded.length > 0 && (
             <details className="window-issues">
               <summary>
-                {excluded.length} événement(s) non activé(s) au dernier export
+                Événements exclus{" "}
+                <span className="count-badge">{excluded.length}</span>
               </summary>
               {excluded.map((issue) => (
                 <p key={issue.programId}>

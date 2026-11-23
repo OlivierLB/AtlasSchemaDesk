@@ -192,6 +192,8 @@ def main():
             expect(page.locator("#sql-commit")).to_be_disabled()
             page.locator("#events-toggle").click()
             expect(page.get_by_role("heading", name="Événements planifiés")).to_be_visible()
+            page.get_by_role("combobox", name="Environnement analysé", exact=True).select_option("local")
+            page.get_by_role("button", name="Catalogue des événements", exact=True).click()
             expect(page.locator(".events-table tbody tr")).to_have_count(2)
             page.get_by_role("combobox", name="État", exact=True).select_option("ENABLED")
             expect(page.locator(".events-table tbody tr")).to_have_count(1)
@@ -302,6 +304,8 @@ def main():
             page.screenshot(path=str(DEST / "sql-mobile.png"))
             assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), "Mobile SQL overflow"
             page.goto(base + "/#/events")
+            page.get_by_role("combobox", name="Environnement analysé", exact=True).select_option("local")
+            page.get_by_role("button", name="Catalogue des événements", exact=True).click()
             expect(page.get_by_role("heading", name="Événements planifiés")).to_be_visible()
             page.screenshot(path=str(DEST / "events-mobile.png"))
             page.get_by_role("button", name="Inspecter daily_refresh", exact=True).click()

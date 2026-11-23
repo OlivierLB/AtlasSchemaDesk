@@ -410,6 +410,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/events/reference": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read event definitions from the configured local SQL repository without database access */
+        get: {
+            parameters: {
+                query?: {
+                    timeZone?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Reference source catalog */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EventReferenceCatalog"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -863,6 +901,16 @@ export interface components {
             to: string;
             /** @default 30 */
             lookbackMinutes: number;
+            /**
+             * @default local
+             * @enum {string}
+             */
+            source: "local" | "reference";
+            /**
+             * @description Assumed IANA time zone for SQL sources without an explicit SET time_zone.
+             * @default UTC
+             */
+            timeZone: string;
         };
         EventWindowMatch: {
             engine: string;
@@ -899,6 +947,14 @@ export interface components {
             unknown: components["schemas"]["EventWindowIssue"][];
             excluded: components["schemas"]["EventWindowIssue"][];
             buckets: components["schemas"]["EventWindowBucket"][];
+        };
+        EventReferenceCatalog: {
+            generatedAt: string;
+            engines: {
+                [key: string]: unknown;
+            };
+            warnings: string[];
+            filesRead: number;
         };
     };
     responses: never;

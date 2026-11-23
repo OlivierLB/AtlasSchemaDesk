@@ -142,6 +142,14 @@ func (a *App) Handler() http.Handler {
 		return http.StatusOK, a.Config.Public(), nil
 	})
 	a.registerSettings(api)
+	api("GET /api/events/reference", func(r *http.Request, _ []byte) (int, any, error) {
+		zone := r.URL.Query().Get("timeZone")
+		if zone == "" {
+			zone = "UTC"
+		}
+		value, err := a.referenceEvents(zone)
+		return http.StatusOK, value, err
+	})
 	api("POST /api/events/window", func(_ *http.Request, body []byte) (int, any, error) {
 		value, err := a.eventWindow(body)
 		return http.StatusOK, value, err

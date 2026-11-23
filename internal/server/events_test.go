@@ -2,12 +2,36 @@ package server
 
 import (
 	"encoding/json"
+	"github.com/OlivierLB/AtlasSchemaDesk/internal/config"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 )
+
+func TestReferenceWindowWithoutLocalCatalogOrDatabase(t *testing.T) {
+	h := newHarness(t)
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "jobs.sql"), []byte("CREATE EVENT library.tick ON SCHEDULE EVERY 1 HOUR STARTS '2026-01-01 10:00:00' DISABLE DO SELECT 1;"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	h.app.Config.Routines = &config.RoutinesRepository{Path: root, DefaultSchema: "library"}
+	status, body := h.api("GET", "/api/events/reference?timeZone=UTC", "")
+	if status != http.StatusOK || !strings.Contains(body, `"status":"DISABLED"`) {
+		t.Fatalf("reference catalog: %d %s", status, body)
+	}
+	status, body = h.api("POST", "/api/events/window", `{"source":"reference","timeZone":"UTC","from":"2026-11-23T10:00:00Z","to":"2026-11-23T11:00:00Z"}`)
+	if status != http.StatusOK || !strings.Contains(body, `"programId":"reference:event:library.tick"`) || !strings.Contains(body, `"starts":1`) {
+		t.Fatalf("reference projection: %d %s", status, body)
+	}
+	for _, zone := range []string{"Local", "not-a-time-zone"} {
+		status, _ = h.api("GET", "/api/events/reference?timeZone="+zone, "")
+		if status < 400 {
+			t.Fatal("invalid timezone accepted")
+		}
+	}
+}
 
 func TestEventWindowUsesOnlyCachedCatalog(t *testing.T) {
 	h := newHarness(t)

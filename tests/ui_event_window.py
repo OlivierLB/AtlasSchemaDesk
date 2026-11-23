@@ -22,6 +22,8 @@ def main():
     def event(name, impact, **extra):
         return dict(id=f"store:event:{name}", name=name, kind="event", schema="public", body="SELECT 1;", status="ENABLED", schedule="toutes les 15 MINUTE", impact=impact, **extra)
     programs = [event("refresh_products", dict(writes=["public.products"])), event("report_sales", dict(reads=["public.products"])), event("unknown_schedule", dict(dynamicSql=True)), {**event("paused", {}), "status": "DISABLED"}]
+    programs[0]["impact"]["calls"] = ["store:procedure:refresh_helper"]
+    helper = dict(id="store:procedure:refresh_helper", kind="procedure", schema="public", name="refresh_helper", body="UPDATE products SET quantity = 0;", impact=dict(writes=["public.products"]))
 
     def respond(route):
         path = urlparse(route.request.url).path
@@ -30,7 +32,8 @@ def main():
         elif path == "/api/sessions/current": data = dict(transactions={}, expiresInSeconds=1800, active=0)
         elif path == "/api/status": data = dict(state="success", transactions={}, s3=dict(state="idle"), apply=dict(state="idle"))
         elif path == "/data/schema.json": data = dict(generatedAt="2026-11-23T09:00:00Z", sources=dict(store=[dict(schema="public", name="products", columns=[dict(name="id", type="integer", primary=True)], foreignKeys=[])]))
-        elif path == "/data/programs.json": data = dict(generatedAt="2026-11-23T09:00:00Z", engines=dict(store=dict(programs=programs, tableStats={}, tableImpacts={})))
+        elif path == "/data/programs.json": data = dict(generatedAt="2026-11-23T09:00:00Z", engines=dict(store=dict(programs=[], tableStats={}, tableImpacts={})))
+        elif path == "/api/events/reference": data = dict(generatedAt="2026-11-23T09:00:00Z", engines=dict(store=dict(programs=[*programs, helper], tableStats={}, tableImpacts={})), warnings=[], filesRead=4)
         elif path == "/api/events/window":
             value = route.request.post_data_json
             queries.append(value)
@@ -65,18 +68,29 @@ def main():
             page.get_by_label("Heure de fin", exact=True).fill("11:00")
             page.get_by_role("button", name="Analyser le créneau", exact=True).click()
             expect(page.locator(".window-events tbody tr")).to_have_count(2)
+            assert queries[-1]["source"] == "reference"
             assert queries[-1]["from"].startswith("2026-11-23T09:00:00")
             assert queries[-1]["to"].startswith("2026-11-23T10:00:00")
-            expect(page.get_by_text("Peut encore tourner · durée inconnue", exact=True)).to_be_visible()
+            expect(page.get_by_text("Durée d’exécution inconnue", exact=True)).to_be_visible()
             expect(page.locator(".window-shared-row")).to_have_count(1)
             expect(page.get_by_text("Horaires structurés absents : actualise le catalogue", exact=True)).to_be_visible()
+            page.get_by_role("button", name="Catalogue des événements", exact=True).click()
+            expect(page.locator(".events-table tbody tr")).to_have_count(4)
+            page.get_by_role("searchbox", name="Rechercher un événement").fill("report_sales")
+            expect(page.locator(".events-table tbody tr")).to_have_count(1)
+            page.get_by_role("button", name="Analyse par créneau", exact=True).click()
+            expect(page.get_by_label("Heure de début", exact=True)).to_have_value("10:00")
+            expect(page.locator(".window-events tbody tr")).to_have_count(2)
             page.screenshot(path=str(DEST / "window-desktop.png"))
             page.get_by_role("button", name="Examiner refresh_products", exact=True).click()
             expect(page.get_by_role("heading", name="refresh_products", exact=True)).to_be_visible()
+            page.get_by_role("button", name="Dépendances", exact=True).click()
+            page.get_by_role("button", name="public.refresh_helper", exact=True).click()
+            expect(page.get_by_role("heading", name="refresh_helper", exact=True)).to_be_visible()
             page.get_by_role("button", name="Fermer la fiche", exact=True).click()
             page.get_by_role("combobox", name="Inclure les lancements précédents", exact=True).select_option("0")
             page.get_by_role("button", name="Analyser le créneau", exact=True).click()
-            expect(page.get_by_text("Peut encore tourner · durée inconnue", exact=True)).not_to_be_visible()
+            expect(page.get_by_text("Durée d’exécution inconnue", exact=True)).not_to_be_visible()
             assert queries[-1]["lookbackMinutes"] == 0
             page.get_by_role("checkbox", name="Toute la journée").check()
             page.get_by_role("button", name="Analyser le créneau", exact=True).click()

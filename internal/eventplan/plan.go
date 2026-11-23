@@ -84,6 +84,10 @@ func Build(engines map[string]*model.Engine, generatedAt string, from, to time.T
 				r.Excluded = append(r.Excluded, issue("Planificateur désactivé au dernier export"))
 				continue
 			}
+			if p.Source != nil && p.Source.Status == "reference" && p.EventSchedule.Type == "RECURRING" && p.EventSchedule.Starts == nil {
+				r.Unknown = append(r.Unknown, issue("Départ absent ou calculé dans le script : l’heure dépend du déploiement sur l’environnement de référence"))
+				continue
+			}
 			count, zone, err := counter(p.EventSchedule, from.Add(-time.Duration(lookback)*time.Minute), to)
 			if err != nil {
 				r.Unknown = append(r.Unknown, issue(err.Error()))

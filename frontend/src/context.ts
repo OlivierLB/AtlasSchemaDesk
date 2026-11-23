@@ -34,7 +34,7 @@ export interface AtlasContext {
   updateSql: (engine: string, patch: Partial<SqlState>) => void;
   connection: (id: string) => Connection | undefined;
   impact: (table: Table) => Impact | undefined;
-  openProgram: (program: Program) => void;
+  openProgram: (program: Program, catalog?: Programs) => void;
   notice: (message: string) => void;
   refreshSession: () => Promise<void>;
 }
