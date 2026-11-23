@@ -1,4 +1,11 @@
 [server]
+# Inactivity expires browser sessions and rolls back pending transactions.
+session_idle_seconds = 1800
+export_timeout_seconds = 300
+dump_list_timeout_seconds = 120
+restore_timeout_seconds = 3600
+# Set false to list cached backups until a manual refresh is requested in the UI.
+refresh_dumps_on_start = true
 bind = "127.0.0.1"
 port = 8765
 allowed_db_hosts = ["localhost", "127.0.0.1"]
@@ -34,6 +41,8 @@ allow_writes = false
 # [routines_repository]
 # path = "../my-routines"
 # pattern = "{schema}/{kind}s/{name}.sql"
+# connections = ["library"]
+# scan_definitions = true
 
 # [[dump_sources]]
 # connection = "library"

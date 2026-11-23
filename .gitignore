@@ -1,6 +1,8 @@
 # Local configuration, credentials, databases and generated exports are never tracked.
 atlas.toml
 *.local.toml
+*.toml.previous
+.*.candidate-*
 .env
 .env.*
 !.env.example
@@ -9,7 +11,7 @@ local/
 private/
 data/
 backups/
-dumps/
+/dumps/
 *.sql
 *.sql.gz
 *.dump
@@ -20,8 +22,9 @@ dumps/
 .venv/
 __pycache__/
 *.py[cod]
-*.egg-info/
+bin/
 dist/
+!web/dist/
 build/
 .pytest_cache/
 test-results/
@@ -29,3 +32,6 @@ test-results/
 .codex/
 .agents/
 .superdesign/
+node_modules/
+web/dist/app/
+*.tsbuildinfo

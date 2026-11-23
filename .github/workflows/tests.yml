@@ -8,12 +8,26 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pip install '.[drivers,test]' build
-      - run: python -m playwright install --with-deps firefox
+      - run: npm ci --prefix frontend
+      - run: npm run build --prefix frontend
+      - run: npm run api:generate --prefix frontend && git diff --exit-code -- frontend/src/api.generated.ts
+      - run: npm run typecheck --prefix frontend && npm run lint --prefix frontend && npm run format:check --prefix frontend && npm test --prefix frontend
+      - run: make vet
+      - run: pip install -r tests/requirements.txt && python -m playwright install --with-deps firefox
+      - run: python -m unittest discover -s tests -p test_check_public.py
       - run: python scripts/check_public.py
       - run: bash tests/run.sh
-      - run: python -m build
+      - run: python scripts/check_distribution.py bin/atlas-schema-desk
       - run: docker build -t atlas-schema-desk:test .
+      - run: python scripts/check_docker.py

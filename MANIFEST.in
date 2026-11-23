@@ -1,9 +1,0 @@
-include README.md LICENSE CONTRIBUTING.md atlas.example.toml .env.example
-include Dockerfile docker-compose.yml docker-compose.test.yml
-recursive-include scripts *.py *.sh
-recursive-include tests *.py *.sh *.json
-recursive-include atlas/public *
-prune private
-prune local
-prune .local
-global-exclude __pycache__ *.py[cod]

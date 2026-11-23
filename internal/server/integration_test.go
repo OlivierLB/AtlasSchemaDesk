@@ -1,0 +1,134 @@
+package server
+
+// HTTP ownership tests against the disposable sample databases (tests/run.sh).
+
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"os"
+	"strings"
+	"sync"
+	"testing"
+
+	"github.com/OlivierLB/AtlasSchemaDesk/internal/catalog"
+	"github.com/OlivierLB/AtlasSchemaDesk/internal/config"
+	"github.com/OlivierLB/AtlasSchemaDesk/internal/db"
+	"github.com/OlivierLB/AtlasSchemaDesk/internal/sessions"
+)
+
+type clock struct {
+	mu  sync.Mutex
+	now float64
+}
+
+func (c *clock) get() float64  { c.mu.Lock(); defer c.mu.Unlock(); return c.now }
+func (c *clock) set(v float64) { c.mu.Lock(); c.now = v; c.mu.Unlock() }
+
+func integration(t *testing.T) (*harness, *clock) {
+	path := os.Getenv("ATLAS_TEST_CONFIG")
+	if path == "" {
+		t.Skip("requires disposable sample databases (tests/run.sh)")
+	}
+	cfg, err := config.Load(path, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cfg.DataDir = t.TempDir()
+	if err := catalog.Export(cfg); err != nil {
+		t.Fatal(err)
+	}
+	c := &clock{}
+	app, err := New(cfg, sessions.NewManager(cfg, c.get), "/bin/false", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(app.Close)
+	return &harness{t: t, app: app, handler: app.Handler()}, c
+}
+
+func (h *harness) session() map[string]string {
+	h.t.Helper()
+	request := map[string]string{"X-DB-Atlas": "1", "Host": fmt.Sprintf("127.0.0.1:%d", h.app.Config.Port)}
+	status, body := h.do("POST", "/api/sessions", "{}", request)
+	if status != http.StatusCreated {
+		h.t.Fatalf("session: %d %s", status, body)
+	}
+	var created map[string]any
+	_ = json.Unmarshal([]byte(body), &created)
+	request["X-Atlas-Session"] = created["id"].(string)
+	return request
+}
+
+func (h *harness) sqlAs(headers map[string]string, engine, sql string) map[string]any {
+	h.t.Helper()
+	body, _ := json.Marshal(map[string]string{"engine": engine, "sql": sql})
+	status, response := h.do("POST", "/api/sql", string(body), headers)
+	if status != http.StatusOK {
+		h.t.Fatalf("%s: %d %s", sql, status, response)
+	}
+	var decoded map[string]any
+	_ = json.Unmarshal([]byte(response), &decoded)
+	return decoded
+}
+
+func firstCell(response map[string]any) any {
+	return response["results"].([]any)[0].(map[string]any)["rows"].([]any)[0].([]any)[0]
+}
+
+func TestIntegrationIndependentSessionsGridErrorsAndRollback(t *testing.T) {
+	h, _ := integration(t)
+	for _, engine := range []string{"library-write", "store-write", "older-write"} {
+		a, b := h.session(), h.session()
+		if h.sqlAs(a, engine, "UPDATE atlas_probe SET value='http-pending' WHERE id=1")["txOpen"] != true {
+			t.Fatalf("%s: transaction not open", engine)
+		}
+		if got := firstCell(h.sqlAs(a, engine, "SELECT value FROM atlas_probe WHERE id=1")); got != "http-pending" {
+			t.Fatalf("%s: own session sees %v", engine, got)
+		}
+		if got := firstCell(h.sqlAs(b, engine, "SELECT value FROM atlas_probe WHERE id=1")); got != "original" {
+			t.Fatalf("%s: other session sees %v", engine, got)
+		}
+		if status, body := h.do("POST", "/api/sql/commit", `{"engine":"`+engine+`"}`, b); status != 200 || !strings.Contains(body, `"done":false`) {
+			t.Fatalf("%s: commit of another session: %d %s", engine, status, body)
+		}
+		if h.sqlAs(a, engine, "SELECT * FROM atlas_missing_table")["error"] == nil {
+			t.Fatalf("%s: missing table without error", engine)
+		}
+		options, _ := h.app.Config.Connection(engine)
+		status, body := h.do("POST", "/api/data/rows", fmt.Sprintf(`{"engine":%q,"schema":%q,"table":"atlas_probe"}`, engine, options.DefaultSchema), a)
+		if status != 200 || !strings.Contains(body, `"value":"http-pending"`) {
+			t.Fatalf("%s: grid %d %s", engine, status, body)
+		}
+		h.do("POST", "/api/sql/rollback", `{"engine":"`+engine+`"}`, a)
+		if got := firstCell(h.sqlAs(b, engine, "SELECT value FROM atlas_probe WHERE id=1")); got != "original" {
+			t.Fatalf("%s: after rollback %v", engine, got)
+		}
+	}
+}
+
+func TestIntegrationExpiryClosesRealUncommittedTransaction(t *testing.T) {
+	h, c := integration(t)
+	headers := h.session()
+	h.sqlAs(headers, "library-write", "UPDATE atlas_probe SET value='must-expire' WHERE id=1")
+	c.set(float64(h.app.Config.SessionIdleSeconds))
+	if status, _ := h.do("GET", "/api/sessions/current", "", headers); status != http.StatusConflict {
+		t.Fatalf("expired session answered %d", status)
+	}
+	options, _ := h.app.Config.Connection("library")
+	observer := db.NewDatabase(h.app.Config, options)
+	defer observer.Close()
+	rows, err := observer.Query("SELECT value FROM atlas_probe WHERE id=1")
+	if err != nil || rows[0]["value"] != "original" {
+		t.Fatalf("uncommitted change survived expiry: %v %v", rows, err)
+	}
+}
+
+func TestIntegrationRefsThroughCatalog(t *testing.T) {
+	h, _ := integration(t)
+	headers := h.session()
+	status, body := h.do("POST", "/api/data/refs", `{"engine":"store","schema":"sakila","table":"actor","row":{"actor_id":1}}`, headers)
+	if status != 200 || !strings.Contains(body, `"table":"film_actor"`) || !strings.Contains(body, `"count":`) {
+		t.Fatalf("refs: %d %s", status, body)
+	}
+}

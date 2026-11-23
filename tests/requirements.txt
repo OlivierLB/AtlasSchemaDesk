@@ -1,0 +1,2 @@
+# Test tooling only (browser and image checks); the application itself is a Go binary.
+playwright>=1.50,<2
