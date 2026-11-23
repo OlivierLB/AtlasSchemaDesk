@@ -1,89 +1,177 @@
 # Atlas Schema Desk
 
-A local PostgreSQL and MySQL explorer: browse schemas and foreign keys, inspect stored programs and their impact, read table data, and use a SQL console with explicit commit and rollback. The interface includes schema history, CodeMirror completion, formatting, and optional backup restoration.
+[English](README.md) · [Français](README.fr.md)
 
-Atlas Schema Desk is a single Go binary with the React interface embedded. PostgreSQL 10+ and MySQL 8 are tested. The application runs locally without a cloud account. Building from a checkout needs Go 1.27+ and Node 22.12+; a built binary or the Docker image needs neither, nor Python.
+A local explorer for PostgreSQL and MySQL databases. Browse schemas, tables and foreign keys, inspect stored programs and their impact on tables, read and filter table data, and run SQL in a console with explicit commit and rollback. Optional modules compare routines with a local SQL repository and list or restore database backups.
 
-## Start in a few minutes
+Atlas Schema Desk is a single Go binary with its React interface embedded. It runs entirely on your machine, without a cloud account or telemetry. PostgreSQL 10+ and MySQL 8 are tested (CI uses PostgreSQL 10, PostgreSQL 18 and MySQL 8.4).
+
+## Features
+
+- **Overview** — every configured database with its color, recently opened tables and catalog status.
+- **Navigation tree** — databases, schemas and tables with search, across any number of sources.
+- **Table views** — *Structure* (columns, keys, indexes), *Relations* (incoming and outgoing foreign keys), *Data* (paginated grid with filters, sort and per-cell editing on writable connections), *SQL programs* (triggers and routines touching the table), *Relation map* and *SQL query*.
+- **Stored programs** — functions, procedures, triggers and events with their source code and a static impact analysis: tables read, written, written indirectly through calls, probable reads/writes through dynamic SQL, called programs and callers.
+- **Events** — a dedicated page listing scheduled events (MySQL) with filters by source and status.
+- **SQL console** — CodeMirror editor with schema-aware completion, formatting (sql-formatter), query history kept in the browser, read-only by default, pending transactions committed or rolled back explicitly.
+- **Schema history** — each export fingerprints the catalog; a new version is recorded only when a source changes.
+- **Connections and backups** — add, edit and delete connections and backup sources from the interface, then apply the configuration with an in-place restart.
+- **Maintenance jobs** — catalog export, backup listing and restoration run as cancellable jobs with bounded, redacted live logs.
+
+The interface labels are currently in French.
+
+## Requirements
+
+| Use | Needs |
+| --- | --- |
+| Run a built binary | nothing else (drivers and interface are compiled in) |
+| Run the Docker image | Docker |
+| Build from source | Go 1.27+ and Node 22.12+ |
+| Browser and integration tests | Python 3, Playwright with Firefox, Docker Compose |
+| S3 backup sources | AWS CLI, installed and configured separately |
+
+## Quick start
 
 ```sh
 git clone https://github.com/OlivierLB/AtlasSchemaDesk.git
 cd AtlasSchemaDesk
-make frontend build          # or: npm ci/run build --prefix frontend, then go build
+make frontend build          # npm ci + Vite build, then go build into bin/
 cp atlas.example.toml atlas.toml
 cp .env.example .env
 ```
 
-Edit `atlas.toml` for an existing database and set its password in `.env` or your shell environment. Start with a database account that has only the privileges you need, preferably SELECT and catalog access.
+Edit `atlas.toml` for an existing database and set its password in `.env` or in your shell environment. Start with a database account that has only the privileges you need, preferably SELECT and catalog access.
 
 ```sh
 bin/atlas-schema-desk --config atlas.toml
 # Open http://localhost:8765
 ```
 
-The server exports catalogs on startup; click **Actualiser** to refresh them. The interface currently uses French labels. Export failures preserve the previous complete catalog and appear in the status banner. Database drivers are compiled in. `bin/atlas-schema-desk check --config atlas.toml` verifies every connection read-only, and `inspect` prints a credential-free configuration summary.
+On startup the server exports the catalogs of every connection; click **Actualiser** to refresh them later. If an export fails, the previous complete catalog is kept and the error appears in the status banner.
 
-## Connections
+## Command line
 
-Add any number of `[[connections]]` sections with unique lowercase IDs. The ID is independent of the driver: two PostgreSQL sources can use different names and colors. Each browser tab owns independent persistent connections, serialized per source. Reloading a tab retains its session; duplicating it creates a separate one.
+```text
+atlas-schema-desk [--config atlas.toml] [--port N] [--bind ADDRESS]   start the server (default command)
+atlas-schema-desk check   --config atlas.toml                         test every connection, read-only
+atlas-schema-desk inspect --config atlas.toml                         print a credential-free configuration summary (JSON)
+atlas-schema-desk export  --config atlas.toml                         export catalogs without starting the server
+atlas-schema-desk dumps   --config atlas.toml list                    list backups of the configured sources
+atlas-schema-desk dumps   --config atlas.toml apply CONNECTION VERSION   restore one backup version
+atlas-schema-desk version                                             print the version
+```
+
+`--port` and `--bind` override `[server]` values. The bind address must be `127.0.0.1`, `localhost` or `0.0.0.0` (containers only).
+
+## Configuration
+
+The configuration is a TOML file (`atlas.toml` by default). A sibling `.env` file is read automatically; relative paths resolve from the configuration file's directory.
+
+### Server
 
 ```toml
 [server]
 bind = "127.0.0.1"
 port = 8765
 allowed_db_hosts = ["127.0.0.1", "localhost"]
+data_dir = ".local/data"            # generated catalogs and history
+session_idle_seconds = 1800
+export_timeout_seconds = 300
+dump_list_timeout_seconds = 120
+restore_timeout_seconds = 3600
+refresh_dumps_on_start = true
+```
 
+All keys are optional; the values above are the defaults. Database hosts must be listed in `allowed_db_hosts`. Timeouts must be positive integers.
+
+### Connections
+
+Add any number of `[[connections]]` sections:
+
+```toml
 [[connections]]
 id = "library"
 label = "Library"
-driver = "postgresql"
+driver = "postgresql"               # or "mysql"
 host = "127.0.0.1"
-port = 5432
+port = 5432                         # default 5432 (PostgreSQL) or 3306 (MySQL)
 database = "pagila"
 user = "reader"
 password_env = "LIBRARY_DB_PASSWORD"
-default_schema = "public"
+default_schema = "public"           # defaults to "public", or the database name for MySQL
 color = "#8ab4f8"
 allow_writes = false
 ```
 
-Use `driver = "mysql"` for MySQL and set `default_schema` to the database name. Passwords belong in environment variables, never in TOML. The `.env` parser accepts `KEY=value`, quoted values and full-line comments; it performs no interpolation, shell evaluation, or escape expansion. Existing environment variables take precedence. Paths resolve relative to the configuration file.
+- `id` is lowercase (`[a-z][a-z0-9_-]`, up to 64 characters), unique, and independent of the driver: two PostgreSQL sources can have different names and colors. `sql`, `events`, `data` and `api` are reserved.
+- Passwords live in environment variables, never in TOML: a `password` key is rejected. The `.env` parser accepts `KEY=value`, an optional `export` prefix, quoted values and full-line comments; it performs no interpolation, shell evaluation or escape expansion. Existing environment variables take precedence.
+- Each browser tab owns its own persistent database connections, serialized per source. Reloading a tab keeps its session; duplicating a tab creates a new one.
 
-`atlas.toml`, `.env`, `private/`, `local/`, `.local/`, dumps, logs, test artifacts and generated catalogs are ignored by Git. Keep all organization-specific settings there. `.env.example` and `atlas.example.toml` contain only public examples. Never force-add local files. The public-content check also rejects tracked local configuration and generated data.
+### Local files and Git
+
+`atlas.toml`, `.env`, `private/`, `local/`, `.local/`, dumps, logs, test artifacts and generated catalogs are ignored by Git. Keep every organization-specific setting there; `atlas.example.toml` and `.env.example` contain only public examples. Never force-add local files: `scripts/check_public.py` rejects tracked local configuration and generated data.
 
 ### Editing connections in the interface
 
-The **Connexions et sauvegardes** page groups each database with its own optional S3 or directory backup source. Add or edit a source from its database card; the database association stays fixed in the form. A source must reference an existing connection, and a connection can own at most one source. The settings API exposes this relationship as `connections[].backup` (or `null`); the flat `dumpSources` list remains available for compatibility. The existing TOML `[[dump_sources]]` format stays supported.
+**Connexions et sauvegardes** (`#/connexions`) groups each database with its optional backup source. Add, edit or delete a connection or backup source from its card.
 
-**Connexions** (`#/connexions`) lists the configured databases and backup sources and lets you add, edit and delete them. Changes are validated with the startup loader, then written to the configuration file (the previous version is kept as `*.previous`; comments are not preserved). A password typed in the form is written to the sibling `.env` file (mode 600) and is never sent back to the browser; leave it empty to keep the current one. Connection IDs are immutable because catalogs and history are keyed by them; deleting a connection also removes its backup source. Hosts must belong to `allowed_db_hosts`, which stays file-only. **Appliquer et redémarrer** re-executes the server in place (same process, so launchers keep tracking it) once no transaction, request or maintenance job is running. Restore commands and local dump paths are displayed but only editable in the file: a web request must never choose a shell command or a file to overwrite.
+- Changes are validated with the same loader as startup, then written to the configuration file. The previous version is kept as `*.previous`; TOML comments are not preserved.
+- A password typed in the form is written to the sibling `.env` file (mode 600) and is never sent back to the browser. Leave it empty to keep the current one.
+- Connection IDs are immutable because catalogs and history are keyed by them. Deleting a connection also deletes its backup source. A connection owns at most one backup source.
+- `allowed_db_hosts`, restore commands and local dump paths are displayed but can only be changed in the file: a web request must never choose a host outside the allowlist, a shell command or a file to overwrite.
+- **Appliquer et redémarrer** re-executes the server in place (same process ID, so launchers keep tracking it) once no transaction, request or maintenance job is running.
 
-## SQL and transactions
+The settings API exposes the relationship as `connections[].backup` (or `null`); the flat `dumpSources` list remains for compatibility.
 
-Read-only is the default. It is checked in the API and configured in the database session. Session changes that could bypass this default are rejected. Use a database account with genuinely restricted permissions as an additional boundary; the SQL classifier is conservative guidance rather than a full SQL parser.
+## SQL, data and transactions
 
-Enable `allow_writes = true` per connection when needed. Writes open a transaction that remains pending until **Valider** (commit) or **Annuler** (rollback). Closing the server rolls pending transactions back. PostgreSQL statements and grid reads use savepoints to recover from errors. A MySQL structure statement can commit an existing transaction even when that structure statement fails; the UI reports the resulting state. Some MySQL storage engines are not transactional. Calls to routines can have effects that static analysis cannot predict.
+Read-only is the default. It is enforced in the API and set on the database session; session changes that could bypass it are rejected. Use a database account with genuinely restricted privileges as an additional boundary: the SQL classifier is conservative guidance, not a full SQL parser.
 
-Console results are capped at 500 rows. Values are shown as the database prints them (JSON as JSON, PostgreSQL arrays as `{…}`, booleans as `true`/`false`). Large text cells are truncated to 2,000 characters; binary cells display their byte length. The console uses `?` placeholders with a separate parameter list for grid edits. PostgreSQL statements time out after 15 seconds for the grid and 120 seconds for the console. MySQL applies its `max_execution_time` setting to eligible SELECT statements; it does not bound every kind of statement. Socket read/write timeouts provide an additional bound.
+Set `allow_writes = true` on a connection to allow changes. A write opens a transaction that stays pending until **Valider** (commit) or **Annuler** (rollback). Stopping the server, session expiry or closing the session rolls pending transactions back.
+
+- PostgreSQL statements and grid reads use savepoints to recover from errors inside a transaction.
+- A MySQL DDL statement commits the current transaction implicitly, even when it fails; the interface reports the resulting state. Some MySQL storage engines are not transactional. Routine calls can have effects that static analysis cannot predict.
+- Data grid edits generate a parameterized `UPDATE … WHERE <primary key> = ?` and require a primary key.
+
+Limits:
+
+| Item | Limit |
+| --- | --- |
+| Console result rows | 500 |
+| Data grid page size | 100 by default, up to 500 |
+| Text cell | first 2,000 characters; binary cells show their byte length |
+| PostgreSQL statement timeout | 15 s for the grid, 120 s for the console |
+| MySQL | `max_execution_time` on eligible SELECT statements, plus 125 s socket read/write timeouts |
+
+Values are shown as the database prints them (JSON as JSON, PostgreSQL arrays as `{…}`, booleans as `true`/`false`).
+
+### Sessions
+
+A browser session expires after `session_idle_seconds` (30 minutes by default) without a database operation or explicit renewal; status polling does not keep it alive. The interface warns five minutes before expiry. Expiry and server shutdown close connections and roll back pending transactions.
+
+Reload recovery uses the browser's Web Locks API; browsers without it get a fresh isolated session and the previous one expires normally. A disconnected browser neither cancels nor retries an SQL operation: if its outcome is uncertain, inspect the session and the data before continuing.
 
 ## Optional modules
 
-Set `[server].refresh_dumps_on_start = false` to keep backup sources available while loading their existing local cache at startup. Remote listing then runs only when the user explicitly refreshes backups in the interface. The default is `true`; this setting never triggers a restore.
+### Routine source repository
 
-To compare routines with a local source repository:
+Compare stored programs with SQL files in a local repository:
 
 ```toml
 [routines_repository]
 path = "../my-routines"
 pattern = "{schema}/{kind}s/{name}.sql"
-# Optional: restrict source matching to specific connection IDs.
-connections = ["library"]
-# Find CREATE definitions in shared SQL files instead of requiring one file per routine.
-scan_definitions = true
+connections = ["library"]           # connection IDs this repository applies to
+scan_definitions = true             # find CREATE statements in shared SQL files
 ```
 
-UTF-8 and Latin-1 source files are supported. Comparison ignores whitespace, comments and quote differences. Impact analysis derives reads, writes, calls and indirect writes from SQL text; dynamic SQL references are marked probable. Row counts are catalog estimates, and an unanalyzed nonempty PostgreSQL table displays an unknown count.
+UTF-8 and Latin-1 files are supported. The comparison ignores whitespace, comments and quoting differences.
 
-To list directory backups:
+Impact analysis derives reads, writes, calls and indirect writes from the SQL text; references built with dynamic SQL are marked *probable*. Row counts are catalog estimates; a non-empty PostgreSQL table that was never analyzed shows an unknown count.
+
+### Backups
+
+Directory source:
 
 ```toml
 [[dump_sources]]
@@ -95,9 +183,13 @@ local_path = ".local/dumps/library.sql.gz"
 restore_command = 'gzip -dc "$ATLAS_DUMP_PATH" | psql --dbname=pagila'
 ```
 
-For S3, use `type = "s3-versioned"`, `bucket` and `key`; install and configure the AWS CLI separately. AWS CLI pagination is retained. Only exact-key object versions are offered. No backups are fetched or restored until requested. Dumps and source links stay hidden when their modules are unconfigured.
+S3 source: use `type = "s3-versioned"` with `bucket` and `key` instead of `path` and `pattern`. Only versions of that exact key are offered, and AWS CLI pagination is followed. Install and configure the AWS CLI separately.
 
-**Restoration replaces database contents.** `restore_command` is a trusted shell command from your local configuration and runs with your user privileges. The selected temporary download path is passed in `ATLAS_DUMP_PATH`, and the source ID in `ATLAS_CONNECTION`. The command must read that temporary file and return nonzero on failure. No request-supplied command is executed. Free disk space and size are checked, the previous local dump is kept until restoration succeeds, and open transactions or active requests block restoration. A failed command can still leave a partially restored database; this is not a database backup or atomic restore system.
+Set `[server].refresh_dumps_on_start = false` to load the local backup cache at startup and list remote backups only when you refresh them in the interface. This setting never triggers a restore. Nothing is downloaded or restored until requested. The backup and routine-source features stay hidden when their modules are not configured.
+
+**Restoration replaces the database contents.** `restore_command` is a trusted shell command from your local configuration and runs with your user privileges. The temporary download path is passed in `ATLAS_DUMP_PATH` and the connection ID in `ATLAS_CONNECTION`. The command must read that file and exit non-zero on failure. No command supplied by a request is ever executed.
+
+Before restoring, free disk space and size are checked; the previous local dump is kept until the restore succeeds; open transactions or active requests block the restore. A failed or cancelled command can still leave a partially restored database: this is not a backup system nor an atomic restore. Process-tree cancellation is supported on Linux and in the Docker image.
 
 ## Docker
 
@@ -108,37 +200,53 @@ export ATLAS_UID=$(id -u) ATLAS_GID=$(id -g)
 docker compose up
 ```
 
-The example Compose service mounts a local `atlas.toml` and `.env`, saves exports in an ignored directory, and publishes only `127.0.0.1:8765`. Configure database hosts explicitly. Inside a container, `127.0.0.1` refers to that container; Linux users can configure `host.docker.internal` using the example's host-gateway mapping and add it to `allowed_db_hosts`. Connect to your own networks explicitly if required.
+The image contains only the binary and a shell (for trusted `restore_command` entries); no Node or Python. The Compose service runs read-only, mounts `atlas.toml` (read-only) and `.env`, stores generated data in `.local/`, and publishes only `127.0.0.1:8765`.
 
-The default HTTP bind is localhost. `0.0.0.0` is available for containers; publish its port only on localhost. The server validates HTTP Host headers and requires `X-DB-Atlas: 1` on POST requests to limit DNS rebinding and browser cross-origin requests. There is no authentication or TLS: do not expose it to the internet or an untrusted network. Only packaged static assets and generated catalog files are served; configuration and credentials are outside that directory.
+Inside a container, `127.0.0.1` is the container itself. On Linux, use `host.docker.internal` (mapped to the host gateway in the example) and add it to `allowed_db_hosts`. Attach other Docker networks explicitly if needed.
 
-## Tests
+## Security model
 
-The interface uses React, strict TypeScript and Vite. Node 22.12+ is required for development (CI and Docker use Node 24). In two terminals, run `go run ./cmd/atlas-schema-desk --config atlas.toml` and `npm run dev --prefix frontend`. Vite proxies the API and catalogs to the local Go server.
+- The default bind is localhost. `0.0.0.0` exists for containers; publish the port on localhost only.
+- The server validates the HTTP `Host` header and requires `X-DB-Atlas: 1` on POST requests to limit DNS rebinding and cross-origin requests.
+- There is **no authentication and no TLS**: never expose it to the internet or an untrusted network.
+- Only the embedded interface and generated catalog files are served. Hosts, users and passwords never reach the browser through the public configuration, and error messages and job logs are redacted.
 
-Run `npm run typecheck --prefix frontend`, `npm run lint --prefix frontend` and `npm test --prefix frontend` for frontend checks. `frontend/openapi.json` is the HTTP contract: edit it with the Go handlers, then run `npm run api:generate --prefix frontend` and commit both. Go tests fail when a contract route is not served or a response field is undeclared. Build the frontend before `go build`: the binary embeds `web/dist/app`.
+## Development
 
-Sessions expire after 30 minutes without a database operation or explicit renewal. Status polling does not keep transactions alive. The interface warns five minutes before expiry; expiry and server shutdown close connections and roll back pending transactions. Reload recovery uses the browser's Web Locks API; browsers without it receive a fresh isolated session, and the previous session expires normally. A disconnected browser does not cancel or retry an SQL operation. If its outcome is uncertain, inspect the session and data before continuing.
+The backend uses Go's standard HTTP library, `pgx/pgconn` and `go-mysql`. The frontend uses React 19, strict TypeScript, TanStack Query, CodeMirror and Vite.
 
-Maintenance jobs stream bounded, redacted logs and support cancellation. Optional positive integer settings under `[server]` are `session_idle_seconds = 1800`, `export_timeout_seconds = 300`, `dump_list_timeout_seconds = 120`, and `restore_timeout_seconds = 3600`. Cancellation or failure of a restore can leave the database partially restored: inspect it before reuse. Process-tree cancellation is supported on Linux and in the Docker image.
+```sh
+go run ./cmd/atlas-schema-desk --config atlas.toml   # terminal 1
+npm run dev --prefix frontend                        # terminal 2, Vite proxies the API to Go
+```
+
+- Build the frontend before `go build`: the binary embeds `web/dist/app`.
+- `frontend/openapi.json` is the HTTP contract. Change it together with the Go handlers, run `npm run api:generate --prefix frontend` and commit both. Go tests fail when a contract route is not served or a response field is undeclared.
+
+### Tests
 
 ```sh
 make frontend
 make test                                  # go vet, gofmt, go test -race
+npm run typecheck --prefix frontend
+npm run lint --prefix frontend
+npm test --prefix frontend
 pip install -r tests/requirements.txt      # browser test tooling only
 python -m playwright install firefox
-bash tests/run.sh                          # disposable databases, integration and Firefox checks
+bash tests/run.sh                          # or: make integration
 python scripts/check_distribution.py bin/atlas-schema-desk
 docker build -t atlas-schema-desk:test .
 python scripts/check_docker.py
 ```
 
-The suite starts a separate `atlas-schema-desk-test` Compose project with PostgreSQL 18, PostgreSQL 10 and MySQL 8.4 on localhost ports 55432, 55433 and 53306. Its data uses disposable tmpfs storage. Pagila 3.0 and a public Sakila mirror are downloaded at pinned commits with SHA-256 verification into ignored storage. Tests add small probe tables, triggers, a procedure and an event. They verify transactions, savepoints, actual database read-only mode, MySQL implicit commits, configuration, optional backups, HTTP protections and Firefox UI behavior with six source IDs. The script stops only that test project on exit.
+`make check` runs `make test`, the build, the public-content check and the distribution check.
 
-The sample databases retain their original licenses: [Pagila](https://github.com/devrimgunduz/pagila), and [Sakila's BSD license](https://dev.mysql.com/doc/sakila/en/sakila-license.html). Samples are downloaded for tests and are not shipped in the package.
+`tests/run.sh` starts a separate `atlas-schema-desk-test` Compose project with PostgreSQL 18, PostgreSQL 10 and MySQL 8.4 on localhost ports 55432, 55433 and 53306, backed by disposable tmpfs storage. Pagila 3.0 and a public Sakila mirror are downloaded at pinned commits with SHA-256 verification into ignored storage. The tests add small probe tables, triggers, a procedure and an event, and cover transactions, savepoints, database-level read-only mode, MySQL implicit commits, configuration, optional backups, HTTP protections and Firefox UI behavior with six source IDs. The script stops only that test project on exit.
 
-Before committing, run `python scripts/check_public.py`. CI runs this check, unit/integration/browser tests, a self-contained binary check and the Docker image check. `scripts/bench_backend.py` measures startup, memory and API latency of a running build. See [CONTRIBUTING.md](CONTRIBUTING.md).
+The sample databases keep their own licenses: [Pagila](https://github.com/devrimgunduz/pagila) and [Sakila (BSD)](https://dev.mysql.com/doc/sakila/en/sakila-license.html). They are downloaded for tests and not shipped.
+
+Before committing, run `python scripts/check_public.py`. CI runs it along with the frontend checks, Go checks, integration and browser tests, the self-contained binary check and the Docker image check. `scripts/bench_backend.py` measures startup, memory and API latency of a running build. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-MIT. Third-party notices of the bundled interface (CodeMirror, sql-formatter, React…) are generated into `THIRD_PARTY_LICENSES.txt` by the frontend build and embedded in the binary. Go dependencies are listed in `go.mod`.
+MIT. Third-party notices for the bundled interface (React, CodeMirror, sql-formatter…) are generated into `THIRD_PARTY_LICENSES.txt` by the frontend build and embedded in the binary. Go dependencies are listed in `go.mod`.
