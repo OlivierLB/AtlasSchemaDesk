@@ -36,6 +36,8 @@ def main():
     CREATE TRIGGER atlas_probe_changed AFTER UPDATE ON atlas_probe FOR EACH ROW INSERT INTO atlas_audit(value) VALUES(NEW.value);
     CREATE PROCEDURE atlas_probe_read() SELECT * FROM atlas_probe;
     CREATE EVENT atlas_probe_tick ON SCHEDULE EVERY 1 DAY DISABLE DO INSERT INTO atlas_audit(value) VALUES('scheduled');
+CREATE EVENT atlas_probe_week ON SCHEDULE EVERY 1 WEEK STARTS '2026-01-05 12:00:00' DISABLE DO SELECT 1;
+CREATE EVENT atlas_probe_quarter ON SCHEDULE EVERY 1 QUARTER STARTS '2026-01-01 12:00:00' DISABLE DO SELECT 1;
     """)
     config=ROOT/'.local/test.toml'
     config.parent.mkdir(exist_ok=True)

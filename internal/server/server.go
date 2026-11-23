@@ -142,6 +142,10 @@ func (a *App) Handler() http.Handler {
 		return http.StatusOK, a.Config.Public(), nil
 	})
 	a.registerSettings(api)
+	api("POST /api/events/window", func(_ *http.Request, body []byte) (int, any, error) {
+		value, err := a.eventWindow(body)
+		return http.StatusOK, value, err
+	})
 	api("POST /api/sessions", func(*http.Request, []byte) (int, any, error) {
 		created, err := a.Sessions.Create()
 		return http.StatusCreated, created, err

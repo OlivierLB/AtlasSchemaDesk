@@ -106,3 +106,11 @@ func TestProgramJSONKeepsHistoricalKeys(t *testing.T) {
 		t.Fatalf("JSON =\n%s\nwant\n%s", encoded, want)
 	}
 }
+
+func TestEventTimingPreservesStructuredMetadata(t *testing.T) {
+	programs := MySQLPrograms(map[string][]Row{"events": {{"schema_name": "public", "name": "tick", "status": "ENABLED", "event_type": "RECURRING", "time_zone": "SYSTEM", "system_time_zone": "UTC", "event_scheduler": "ON", "interval_value": "15", "interval_field": "MINUTE", "starts": "2026-01-01 00:00:00", "ends": "2027-01-01 00:00:00", "body": "SELECT 1"}}})
+	timing := programs[0].EventSchedule
+	if timing == nil || timing.TimeZone != "SYSTEM" || timing.SystemTimeZone != "UTC" || timing.Scheduler != "ON" || timing.Ends == nil || *timing.IntervalValue != "15" {
+		t.Fatalf("event timing lost: %+v", timing)
+	}
+}

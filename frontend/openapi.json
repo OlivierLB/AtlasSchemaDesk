@@ -1284,6 +1284,193 @@
         ],
         "title": "ValidationError",
         "type": "object"
+      },
+      "EventWindowInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "from": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "to": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lookbackMinutes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1440,
+            "default": 30
+          }
+        },
+        "required": [
+          "from",
+          "to"
+        ]
+      },
+      "EventWindowMatch": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "engine": {
+            "type": "string"
+          },
+          "programId": {
+            "type": "string"
+          },
+          "timeZone": {
+            "type": "string"
+          },
+          "scheduler": {
+            "type": "string"
+          },
+          "starts": {
+            "type": "integer"
+          },
+          "firstAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "lastAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "previousAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "engine",
+          "programId",
+          "timeZone",
+          "scheduler",
+          "starts",
+          "firstAt",
+          "lastAt",
+          "previousAt"
+        ]
+      },
+      "EventWindowIssue": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "engine": {
+            "type": "string"
+          },
+          "programId": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "engine",
+          "programId",
+          "reason"
+        ]
+      },
+      "EventWindowBucket": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "from": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "to": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "counts": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer"
+            }
+          }
+        },
+        "required": [
+          "from",
+          "to",
+          "counts"
+        ]
+      },
+      "EventWindowReport": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "generatedAt": {
+            "type": "string"
+          },
+          "from": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "to": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lookbackMinutes": {
+            "type": "integer"
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EventWindowMatch"
+            }
+          },
+          "unknown": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EventWindowIssue"
+            }
+          },
+          "excluded": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EventWindowIssue"
+            }
+          },
+          "buckets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EventWindowBucket"
+            }
+          }
+        },
+        "required": [
+          "generatedAt",
+          "from",
+          "to",
+          "lookbackMinutes",
+          "events",
+          "unknown",
+          "excluded",
+          "buckets"
+        ]
       }
     }
   },
@@ -2589,6 +2776,43 @@
           }
         },
         "summary": "Status"
+      }
+    },
+    "/api/events/window": {
+      "post": {
+        "summary": "Project event starts from the cached catalog without querying a database",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EventWindowInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Scheduled starts and explicit unknown or inactive events",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventWindowReport"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid window or unavailable catalog",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
       }
     }
   }

@@ -74,27 +74,43 @@ const (
 
 // Program is a stored function, procedure, trigger, view or event.
 type Program struct {
-	Layout       Layout
-	Kind         string
-	Schema       string
-	Name         string
-	Signature    string
-	Returns      *string
-	Language     string
-	LastAltered  *string
-	Comment      *string
-	Table        *Ref
-	Timing       *string
-	Events       []string
-	Function     *Ref
-	Status       string
-	Schedule     string
-	Starts       *string
-	LastExecuted *string
-	Body         string
-	ID           string
-	Impact       *Impact
-	Source       *Source
+	Layout        Layout
+	Kind          string
+	Schema        string
+	Name          string
+	Signature     string
+	Returns       *string
+	Language      string
+	LastAltered   *string
+	Comment       *string
+	Table         *Ref
+	Timing        *string
+	Events        []string
+	Function      *Ref
+	Status        string
+	Schedule      string
+	Starts        *string
+	LastExecuted  *string
+	EventSchedule *EventSchedule
+	Body          string
+	ID            string
+	Impact        *Impact
+	Source        *Source
+}
+
+// EventSchedule preserves machine-readable timing from INFORMATION_SCHEMA.EVENTS.
+// Datetimes without an offset are expressed in the event's own time zone.
+type EventSchedule struct {
+	Type           string  `json:"type"`
+	TimeZone       string  `json:"timeZone"`
+	SystemTimeZone string  `json:"systemTimeZone"`
+	Scheduler      string  `json:"scheduler"`
+	ExecuteAt      *string `json:"executeAt"`
+	Starts         *string `json:"starts"`
+	Ends           *string `json:"ends"`
+	Created        *string `json:"created"`
+	IntervalValue  *string `json:"intervalValue"`
+	IntervalField  *string `json:"intervalField"`
 }
 
 // MarshalJSON writes the keys each layout historically produced, in order.
@@ -125,6 +141,9 @@ func (p *Program) MarshalJSON() ([]byte, error) {
 		object.add("schedule", p.Schedule)
 		object.add("starts", p.Starts)
 		object.add("lastExecuted", p.LastExecuted)
+		if p.EventSchedule != nil {
+			object.add("eventSchedule", p.EventSchedule)
+		}
 	}
 	object.add("body", p.Body)
 	if p.ID != "" {

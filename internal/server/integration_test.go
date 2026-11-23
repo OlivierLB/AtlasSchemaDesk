@@ -10,12 +10,62 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/OlivierLB/AtlasSchemaDesk/internal/catalog"
 	"github.com/OlivierLB/AtlasSchemaDesk/internal/config"
 	"github.com/OlivierLB/AtlasSchemaDesk/internal/db"
+	"github.com/OlivierLB/AtlasSchemaDesk/internal/eventplan"
+	"github.com/OlivierLB/AtlasSchemaDesk/internal/model"
 	"github.com/OlivierLB/AtlasSchemaDesk/internal/sessions"
 )
+
+func TestIntegrationEventScheduleMetadata(t *testing.T) {
+	h, _ := integration(t)
+	status, body := h.do("GET", "/data/programs.json", "", map[string]string{"Host": fmt.Sprintf("127.0.0.1:%d", h.app.Config.Port)})
+	if status != http.StatusOK {
+		t.Fatalf("program catalog: %d", status)
+	}
+	var data struct {
+		Engines map[string]*model.Engine `json:"engines"`
+	}
+	if err := json.Unmarshal([]byte(body), &data); err != nil {
+		t.Fatal(err)
+	}
+	found := false
+	for _, p := range data.Engines["store"].Programs {
+		if p.Kind == "event" && p.Name == "atlas_probe_tick" {
+			s := p.EventSchedule
+			if s == nil || s.TimeZone == "" || s.SystemTimeZone == "" || s.Scheduler == "" || s.IntervalValue == nil || s.Starts == nil || s.Created == nil {
+				t.Fatalf("incomplete event metadata: %+v", s)
+			}
+			found = true
+		}
+	}
+	if !found {
+		t.Fatal("disposable test event was not exported")
+	}
+	for _, test := range []struct{ name, from, to string }{{"atlas_probe_week", "2026-01-12T00:00:00Z", "2026-01-13T00:00:00Z"}, {"atlas_probe_quarter", "2026-04-01T00:00:00Z", "2026-04-02T00:00:00Z"}} {
+		found = false
+		for _, p := range data.Engines["store"].Programs {
+			if p.Name != test.name {
+				continue
+			}
+			found = true
+			p.Status = "ENABLED"
+			p.EventSchedule.Scheduler = "ON"
+			from, _ := time.Parse(time.RFC3339, test.from)
+			to, _ := time.Parse(time.RFC3339, test.to)
+			result := eventplan.Build(map[string]*model.Engine{"store": {Programs: []*model.Program{p}}}, "", from, to, 0)
+			if len(result.Events) != 1 || result.Events[0].Starts != 1 {
+				t.Fatalf("MySQL interval normalization mismatch for %s: value=%v field=%v result=%+v", test.name, p.EventSchedule.IntervalValue, p.EventSchedule.IntervalField, result)
+			}
+		}
+		if !found {
+			t.Fatalf("missing disposable schedule: %s", test.name)
+		}
+	}
+}
 
 type clock struct {
 	mu  sync.Mutex

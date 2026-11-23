@@ -65,6 +65,18 @@ export interface Program {
   comment?: string;
   schedule?: string;
   starts?: string;
+  eventSchedule?: {
+    type: string;
+    timeZone: string;
+    systemTimeZone: string;
+    scheduler: string;
+    executeAt: string | null;
+    starts: string | null;
+    ends: string | null;
+    created: string | null;
+    intervalValue: string | null;
+    intervalField: string | null;
+  };
   status?: string;
   lastExecuted?: string;
   timing?: string;
@@ -78,6 +90,8 @@ export interface Program {
     line?: number;
   };
 }
+export type EventWindowReport = components["schemas"]["EventWindowReport"];
+export type EventWindowMatch = components["schemas"]["EventWindowMatch"];
 export interface Programs {
   generatedAt: string;
   engines: Record<

@@ -151,6 +151,16 @@ Une session navigateur expire après `session_idle_seconds` (30 minutes par déf
 
 La reprise après rechargement utilise l’API Web Locks du navigateur ; un navigateur qui ne la propose pas reçoit une nouvelle session isolée et l’ancienne expire normalement. Un navigateur déconnecté n’annule ni ne relance une opération SQL : si son issue est incertaine, vérifiez la session et les données avant de continuer.
 
+## Analyser un créneau d’événements
+
+Dans **Événements**, choisis une date et une plage horaire, ou toute la journée, puis **Analyser le créneau**. Le calcul utilise le catalogue local, sans requête vers les bases. Les saisies et résultats utilisent le fuseau du navigateur ; chaque événement est calculé dans son fuseau exporté. Une heure de fin antérieure au début signifie le lendemain.
+
+Les résultats regroupent les lancements prévus, le dernier départ dans la période précédente choisie et les tables touchées par plusieurs événements. Clique sur une barre de la chronologie pour préciser le créneau. Ces éléments sont des pistes d’enquête : ils ne mesurent ni les durées, ni la concurrence réelle, ni l’historique des exécutions et ne prouvent pas une cause de lenteur. Les états du planificateur et des événements sont ceux du dernier export, même pour une date passée.
+
+Actualise le catalogue après la mise à jour pour charger les horaires structurés. Les métadonnées absentes, fuseaux non résolus, intervalles composites non pris en charge et jours avec changement d’heure sont explicitement signalés comme non calculables. Les événements et planificateurs désactivés sont listés séparément. L’API limite le créneau à sept jours et la période précédente à 24 heures ; les lancements fréquents sont agrégés. Voir la [documentation MySQL des métadonnées d’événements](https://dev.mysql.com/doc/refman/8.4/en/information-schema-events-table.html).
+
+Après compilation du frontend, lance `python tests/ui_event_window.py` dans l’environnement de test pour vérifier cette interface avec des données fictives.
+
 ## Modules optionnels
 
 ### Dépôt de sources des routines

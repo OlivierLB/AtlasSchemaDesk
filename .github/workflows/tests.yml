@@ -28,6 +28,7 @@ jobs:
       - run: python -m unittest discover -s tests -p test_check_public.py
       - run: python scripts/check_public.py
       - run: bash tests/run.sh
+      - run: python tests/ui_event_window.py
       - run: python scripts/check_distribution.py bin/atlas-schema-desk
       - run: docker build -t atlas-schema-desk:test .
       - run: python scripts/check_docker.py

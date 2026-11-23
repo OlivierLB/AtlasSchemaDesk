@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAtlas } from "./context";
 import { Icon } from "./Icon";
+import { EventWindow } from "./EventWindow";
 
 export function Events() {
   const { programs, config, openProgram } = useAtlas();
@@ -42,33 +43,14 @@ export function Events() {
     <div className="page events-page">
       <header className="page-header">
         <div className="eyebrow">AUTOMATISATIONS SQL</div>
-        <h1 className="page-title">Événements planifiés</h1>
+        <h1 className="page-title">
+          Événements planifiés <span className="count-badge">{all.length}</span>
+        </h1>
         <p className="page-subtitle">
           Comprends ce qui s’exécute automatiquement : sa fréquence, son état et
           les tables concernées.
         </p>
       </header>
-      <div className="overview-strip">
-        <div>
-          <strong>{all.length}</strong>
-          <span>événements au catalogue</span>
-        </div>
-        <div>
-          <strong>
-            {
-              all.filter(
-                ({ program }) => program.status?.toUpperCase() === "ENABLED",
-              ).length
-            }
-          </strong>
-          <span>activés dans le catalogue</span>
-        </div>
-        <p>
-          <Icon name="activity" />
-          Les informations viennent du dernier export. Elles ne confirment pas
-          l’état du planificateur en temps réel.
-        </p>
-      </div>
       <div className="filter-toolbar">
         <label className="search-field">
           <Icon name="search" />
@@ -114,6 +96,13 @@ export function Events() {
         </label>
         <span className="result-count" role="status">
           {list.length} résultat{list.length === 1 ? "" : "s"}
+        </span>
+      </div>
+      <EventWindow entries={list} />
+      <div className="section-heading">
+        <h2 className="section-title">Catalogue des événements</h2>
+        <span className="section-help">
+          Définitions et états au dernier export
         </span>
       </div>
       {list.length ? (

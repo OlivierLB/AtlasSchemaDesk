@@ -361,6 +361,55 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/events/window": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Project event starts from the cached catalog without querying a database */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["EventWindowInput"];
+                };
+            };
+            responses: {
+                /** @description Scheduled starts and explicit unknown or inactive events */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EventWindowReport"];
+                    };
+                };
+                /** @description Invalid window or unavailable catalog */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -806,6 +855,50 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+        };
+        EventWindowInput: {
+            /** Format: date-time */
+            from: string;
+            /** Format: date-time */
+            to: string;
+            /** @default 30 */
+            lookbackMinutes: number;
+        };
+        EventWindowMatch: {
+            engine: string;
+            programId: string;
+            timeZone: string;
+            scheduler: string;
+            starts: number;
+            firstAt: string | null;
+            lastAt: string | null;
+            previousAt: string | null;
+        };
+        EventWindowIssue: {
+            engine: string;
+            programId: string;
+            reason: string;
+        };
+        EventWindowBucket: {
+            /** Format: date-time */
+            from: string;
+            /** Format: date-time */
+            to: string;
+            counts: {
+                [key: string]: number;
+            };
+        };
+        EventWindowReport: {
+            generatedAt: string;
+            /** Format: date-time */
+            from: string;
+            /** Format: date-time */
+            to: string;
+            lookbackMinutes: number;
+            events: components["schemas"]["EventWindowMatch"][];
+            unknown: components["schemas"]["EventWindowIssue"][];
+            excluded: components["schemas"]["EventWindowIssue"][];
+            buckets: components["schemas"]["EventWindowBucket"][];
         };
     };
     responses: never;

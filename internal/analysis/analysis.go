@@ -165,6 +165,10 @@ func MySQLPrograms(catalog map[string][]Row) []*model.Program {
 		programs = append(programs, &model.Program{Layout: model.View, Kind: "view", Schema: row.Text("schema_name"), Name: row.Text("name"), Body: row.Text("body")})
 	}
 	for _, row := range catalog["events"] {
+		var timing *model.EventSchedule
+		if _, present := row["time_zone"]; present {
+			timing = &model.EventSchedule{Type: row.Text("event_type"), TimeZone: row.Text("time_zone"), SystemTimeZone: row.Text("system_time_zone"), Scheduler: row.Text("event_scheduler"), ExecuteAt: row.Str("execute_at"), Starts: row.Str("starts"), Ends: row.Str("ends"), Created: row.Str("created_event_zone"), IntervalValue: row.Str("interval_value"), IntervalField: row.Str("interval_field")}
+		}
 		schedule := "une fois le " + row.Python("execute_at")
 		if row.Text("event_type") == "RECURRING" {
 			schedule = "toutes les " + row.Python("interval_value") + " " + row.Python("interval_field")
@@ -172,7 +176,8 @@ func MySQLPrograms(catalog map[string][]Row) []*model.Program {
 		programs = append(programs, &model.Program{
 			Layout: model.MySQLEvent, Kind: "event", Schema: row.Text("schema_name"), Name: row.Text("name"),
 			Status: row.Text("status"), Schedule: schedule, Starts: row.Str("starts"),
-			LastExecuted: row.Str("last_executed"), Body: row.Text("body"),
+			EventSchedule: timing,
+			LastExecuted:  row.Str("last_executed"), Body: row.Text("body"),
 		})
 	}
 	return programs

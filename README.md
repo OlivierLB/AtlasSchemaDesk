@@ -151,6 +151,16 @@ A browser session expires after `session_idle_seconds` (30 minutes by default) w
 
 Reload recovery uses the browser's Web Locks API; browsers without it get a fresh isolated session and the previous one expires normally. A disconnected browser neither cancels nor retries an SQL operation: if its outcome is uncertain, inspect the session and the data before continuing.
 
+## Event window investigation
+
+On **Événements**, select a date and time range (or a whole day), then choose **Analyser le créneau**. The projection uses the cached catalog, not a live database query. Inputs and results use the browser's time zone; each event is calculated in its own exported time zone. A finish time before the start crosses midnight.
+
+Results aggregate scheduled starts, show the latest start within an optional lookback period, and identify tables touched by several candidate events. Click a timeline bar to narrow the window. These are investigation leads, not measured durations, actual concurrency, historical execution records or proof of a slowdown. Event and scheduler states are those observed at the latest export, including for past dates.
+
+Refresh the catalog once after upgrading to export structured schedules. Events with missing metadata, unresolved time zones, unsupported compound intervals or a daylight-saving transition on an analyzed date are listed explicitly as non-calculable. Disabled events and disabled schedulers are listed separately. The API caps windows at seven days and lookback at 24 hours, aggregating high-frequency schedules rather than enumerating every execution. See the [MySQL event metadata reference](https://dev.mysql.com/doc/refman/8.4/en/information-schema-events-table.html) for the source fields.
+
+After building the frontend, run `python tests/ui_event_window.py` in the test environment to check the window UI against synthetic fixtures.
+
 ## Optional modules
 
 ### Routine source repository
