@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/config"
+	"github.com/OlivierLB/Sulcata/internal/config"
 )
 
 const initial = `[server]
@@ -36,7 +36,7 @@ connections = ["library"]
 
 func store(t *testing.T) (*Store, string) {
 	dir := t.TempDir()
-	path := filepath.Join(dir, "atlas.toml")
+	path := filepath.Join(dir, "sulcata.toml")
 	if err := os.WriteFile(path, []byte(initial), 0o600); err != nil {
 		t.Fatal(err)
 	}
@@ -89,7 +89,7 @@ func TestAddEditAndDeleteConnection(t *testing.T) {
 	if store.Label != "Store RW" || !store.AllowWrites || store.Password != "it's #secret " {
 		t.Fatalf("edit lost data or password: %#v", store)
 	}
-	if _, err := os.Stat(filepath.Join(dir, "atlas.toml.previous")); err != nil {
+	if _, err := os.Stat(filepath.Join(dir, "sulcata.toml.previous")); err != nil {
 		t.Fatal("previous configuration not kept")
 	}
 
@@ -111,7 +111,7 @@ func TestAddEditAndDeleteConnection(t *testing.T) {
 
 func TestInvalidChangesLeaveFilesUntouched(t *testing.T) {
 	s, dir := store(t)
-	before, _ := os.ReadFile(filepath.Join(dir, "atlas.toml"))
+	before, _ := os.ReadFile(filepath.Join(dir, "sulcata.toml"))
 	cases := []Connection{
 		{ID: "remote", Driver: "postgresql", Host: "evil.example", Database: "x", User: "u", PasswordEnv: "REMOTE_PASSWORD", Password: "p"},
 		{ID: "Bad Id", Driver: "postgresql", Host: "127.0.0.1", Database: "x", User: "u", PasswordEnv: "X_PASSWORD", Password: "p"},
@@ -124,12 +124,12 @@ func TestInvalidChangesLeaveFilesUntouched(t *testing.T) {
 			t.Errorf("%s accepted: %v", c.ID, err)
 		}
 	}
-	after, _ := os.ReadFile(filepath.Join(dir, "atlas.toml"))
+	after, _ := os.ReadFile(filepath.Join(dir, "sulcata.toml"))
 	env, _ := os.ReadFile(filepath.Join(dir, ".env"))
 	if string(before) != string(after) || strings.Contains(string(env), "REMOTE_PASSWORD") {
 		t.Fatal("a rejected change modified the files")
 	}
-	if leftovers, _ := filepath.Glob(filepath.Join(dir, ".atlas.toml.candidate-*")); len(leftovers) != 0 {
+	if leftovers, _ := filepath.Glob(filepath.Join(dir, ".sulcata.toml.candidate-*")); len(leftovers) != 0 {
 		t.Fatalf("candidate files left: %v", leftovers)
 	}
 }

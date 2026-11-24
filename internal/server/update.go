@@ -4,8 +4,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/sessions"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/update"
+	"github.com/OlivierLB/Sulcata/internal/sessions"
+	"github.com/OlivierLB/Sulcata/internal/update"
 )
 
 // install replaces the running version; set by the desktop app, replaced in tests.

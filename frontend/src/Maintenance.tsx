@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { request } from "./api";
-import { useAtlas } from "./context";
+import { useSulcata } from "./context";
 import { errorText } from "./model";
 import type { ConnectionsOverview, Dumps, Job, VersionIndex } from "./model";
 import { Icon } from "./Icon";
@@ -20,7 +20,7 @@ const inProgress = (job?: Job) =>
 
 export function Maintenance({ onClose }: { onClose: () => void }) {
   const { config, status, selectedVersions, selectVersion, expired, route } =
-    useAtlas();
+    useSulcata();
   const client = useQueryClient();
   const [engine, setEngine] = useState(
     route.engine || config.connections[0]?.id || "",
@@ -510,7 +510,7 @@ export function Maintenance({ onClose }: { onClose: () => void }) {
                     void operation("/api/sessions/close", {}).then((closed) => {
                       if (closed) {
                         window.dispatchEvent(
-                          new Event("atlas-session-expired"),
+                          new Event("sulcata-session-expired"),
                         );
                         onClose();
                       }

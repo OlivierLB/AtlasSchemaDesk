@@ -10,9 +10,9 @@ import (
 
 	"github.com/jackc/pgx/v5/pgconn"
 
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/analysis"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/config"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/sqlconsole"
+	"github.com/OlivierLB/Sulcata/internal/analysis"
+	"github.com/OlivierLB/Sulcata/internal/config"
+	"github.com/OlivierLB/Sulcata/internal/sqlconsole"
 )
 
 const (

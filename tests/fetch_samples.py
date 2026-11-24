@@ -14,7 +14,7 @@ def main():
     dest=ROOT/'.local/samples'
     dest.mkdir(parents=True,exist_ok=True)
     for item in lock:
-        request=urllib.request.Request(item['url'],headers={'User-Agent':'AtlasSchemaDesk-tests'})
+        request=urllib.request.Request(item['url'],headers={'User-Agent':'Sulcata-tests'})
         data=urllib.request.urlopen(request,timeout=60).read()
         if hashlib.sha256(data).hexdigest()!=item['sha256']:
             raise RuntimeError('Public sample checksum mismatch: '+item['name'])

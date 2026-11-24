@@ -15,8 +15,8 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/config"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/dumps"
+	"github.com/OlivierLB/Sulcata/internal/config"
+	"github.com/OlivierLB/Sulcata/internal/dumps"
 )
 
 const logRunes = 4000

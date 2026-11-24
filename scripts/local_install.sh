@@ -18,7 +18,7 @@ out=$root/.local/local-release
 port=9917
 # Go may live outside PATH (~/.local/go, or the toolchain install.sh downloads).
 GO=${GO:-$(command -v go || true)}
-for candidate in "$HOME/.local/go/bin/go" "${ATLAS_TOOLCHAIN_DIR:-$HOME/.local/atlas-toolchain}"/go-*/bin/go; do
+for candidate in "$HOME/.local/go/bin/go" "${SULCATA_TOOLCHAIN_DIR:-$HOME/.local/sulcata-toolchain}"/go-*/bin/go; do
 	[[ -n $GO ]] && break
 	if [[ -x $candidate ]]; then GO=$candidate; fi
 done
@@ -46,4 +46,4 @@ server=$!
 trap 'kill $server 2>/dev/null || true' EXIT
 for _ in $(seq 20); do curl -sf "http://127.0.0.1:$port/SHA256SUMS" >/dev/null && break; sleep 0.2; done
 
-ATLAS_RELEASE_URL=http://127.0.0.1:$port bash "$root/get.sh"
+SULCATA_RELEASE_URL=http://127.0.0.1:$port bash "$root/get.sh"

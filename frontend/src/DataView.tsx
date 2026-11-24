@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Icon } from "./Icon";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError, request } from "./api";
-import { useAtlas } from "./context";
+import { useSulcata } from "./context";
 import { display, errorText, keyOf, tableHref } from "./model";
 import type { RefsResponse, RowsResponse, SqlResponse, Table } from "./model";
 
@@ -16,7 +16,7 @@ export function DataView({ table }: { table: Table }) {
     refreshSession,
     status,
     updateSql,
-  } = useAtlas();
+  } = useSulcata();
   const source = connection(table.engine);
   const client = useQueryClient();
   const [filters, setFilters] = useState<Record<string, string>>(
@@ -530,7 +530,7 @@ function RowDetail({
   close: () => void;
   editColumn?: (column: Table["columns"][number]) => void;
 }) {
-  const { sessionId, expired, notice } = useAtlas();
+  const { sessionId, expired, notice } = useSulcata();
   const refs = useQuery({
     queryKey: ["refs", sessionId, keyOf(table), row],
     queryFn: () =>

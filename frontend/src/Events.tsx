@@ -3,12 +3,12 @@ import { useQuery } from "@tanstack/react-query";
 import { request } from "./api";
 import { errorText } from "./model";
 import type { Programs } from "./model";
-import { useAtlas } from "./context";
+import { useSulcata } from "./context";
 import { Icon } from "./Icon";
 import { EventWindow } from "./EventWindow";
 
 export function Events() {
-  const { programs, config, openProgram } = useAtlas();
+  const { programs, config, openProgram } = useSulcata();
   const [source, setSource] = useState<"reference" | "local">("reference");
   const [timeZone, setTimeZone] = useState(
     Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",

@@ -12,14 +12,14 @@ import (
 	"testing"
 	"testing/fstest"
 
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/config"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/db"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/model"
+	"github.com/OlivierLB/Sulcata/internal/config"
+	"github.com/OlivierLB/Sulcata/internal/db"
+	"github.com/OlivierLB/Sulcata/internal/model"
 )
 
 func configuration(root string) *config.Config {
 	return &config.Config{
-		Path: filepath.Join(root, "atlas.toml"),
+		Path: filepath.Join(root, "sulcata.toml"),
 		Connections: []config.Connection{{ID: "library", Label: "Library", Driver: "postgresql", Host: "127.0.0.1", Port: 5432,
 			Database: "sample", User: "reader", Password: "unit-secret", DefaultSchema: "public", Color: "#8ab4f8"}},
 		Bind: "127.0.0.1", Port: 8765, DataDir: filepath.Join(root, "data"), SessionIdleSeconds: 1800,
@@ -51,14 +51,14 @@ func (f *fakeExecutor) End(string, string) (bool, error)                        
 func writeConfig(t *testing.T, cfg *config.Config) {
 	t.Helper()
 	text := "[server]\nport = 8765\n\n[[connections]]\nid = \"library\"\nlabel = \"Library\"\ndriver = \"postgresql\"\n" +
-		"host = \"127.0.0.1\"\nport = 5432\ndatabase = \"sample\"\nuser = \"reader\"\npassword_env = \"ATLAS_UNIT_PASSWORD\"\n"
+		"host = \"127.0.0.1\"\nport = 5432\ndatabase = \"sample\"\nuser = \"reader\"\npassword_env = \"SULCATA_UNIT_PASSWORD\"\n"
 	if err := os.WriteFile(cfg.Path, []byte(text), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(filepath.Dir(cfg.Path), ".env"), []byte("ATLAS_UNIT_PASSWORD=unit-secret\n"), 0o600); err != nil {
+	if err := os.WriteFile(filepath.Join(filepath.Dir(cfg.Path), ".env"), []byte("SULCATA_UNIT_PASSWORD=unit-secret\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	cfg.Connections[0].PasswordEnv = "ATLAS_UNIT_PASSWORD"
+	cfg.Connections[0].PasswordEnv = "SULCATA_UNIT_PASSWORD"
 	cfg.AllowedDBHosts = []string{"localhost", "127.0.0.1"}
 }
 
@@ -78,7 +78,7 @@ func newHarness(t *testing.T) *harness {
 	}
 	t.Cleanup(app.Close)
 	h := &harness{t: t, app: app, handler: app.Handler()}
-	status, body := h.do("POST", "/api/sessions", "{}", map[string]string{"X-DB-Atlas": "1"})
+	status, body := h.do("POST", "/api/sessions", "{}", map[string]string{"X-Sulcata": "1"})
 	if status != http.StatusCreated {
 		t.Fatalf("session: %d %s", status, body)
 	}
@@ -104,7 +104,7 @@ func (h *harness) do(method, path, body string, headers map[string]string) (int,
 }
 
 func (h *harness) api(method, path, body string) (int, string) {
-	return h.do(method, path, body, map[string]string{"X-DB-Atlas": "1", "X-Atlas-Session": h.token})
+	return h.do(method, path, body, map[string]string{"X-Sulcata": "1", "X-Sulcata-Session": h.token})
 }
 
 func TestPublicConfigAndNetworkBoundary(t *testing.T) {
@@ -124,14 +124,14 @@ func TestPublicConfigAndNetworkBoundary(t *testing.T) {
 	}{
 		{"GET", "/api/config", map[string]string{"Host": "evil.invalid"}},
 		{"POST", "/api/sessions", map[string]string{}},
-		{"POST", "/api/sessions", map[string]string{"X-DB-Atlas": "1", "Origin": "https://evil.invalid"}},
+		{"POST", "/api/sessions", map[string]string{"X-Sulcata": "1", "Origin": "https://evil.invalid"}},
 	}
 	for _, c := range cases {
 		if status, body := h.do(c.method, c.path, "{}", c.headers); status != 403 {
 			t.Errorf("%s %s %v: %d %s", c.method, c.path, c.headers, status, body)
 		}
 	}
-	if status, _ := h.do("POST", "/api/sessions", "{}", map[string]string{"X-DB-Atlas": "1", "Origin": "http://127.0.0.1:8765"}); status != 201 {
+	if status, _ := h.do("POST", "/api/sessions", "{}", map[string]string{"X-Sulcata": "1", "Origin": "http://127.0.0.1:8765"}); status != 201 {
 		t.Errorf("same-origin request refused: %d", status)
 	}
 }
@@ -154,7 +154,7 @@ func TestValidationAndReadOnlyContract(t *testing.T) {
 	if status, response := h.api("POST", "/api/sql", strings.Repeat("x", 1_048_577)); status != 400 || !strings.Contains(response, "JSON") {
 		t.Errorf("oversized body: %d %s", status, response)
 	}
-	if status, _ := h.do("POST", "/api/sql", `{"engine":"library","sql":"SELECT 1"}`, map[string]string{"X-DB-Atlas": "1"}); status != 400 {
+	if status, _ := h.do("POST", "/api/sql", `{"engine":"library","sql":"SELECT 1"}`, map[string]string{"X-Sulcata": "1"}); status != 400 {
 		t.Errorf("missing session header: %d", status)
 	}
 }
@@ -218,7 +218,7 @@ func TestDataFileAllowlist(t *testing.T) {
 	if status, _ := h.do("GET", "/data/private.json", "", nil); status != 404 {
 		t.Fatalf("private file served: %d", status)
 	}
-	if status, _ := h.do("GET", "/data/../atlas.toml", "", nil); status == 200 {
+	if status, _ := h.do("GET", "/data/../sulcata.toml", "", nil); status == 200 {
 		t.Fatal("path traversal served")
 	}
 	_ = os.WriteFile(filepath.Join(dir, "schema.json"), []byte("{}"), 0o600)
@@ -297,7 +297,7 @@ func columnOf(kind string) model.Column { return model.Column{Name: "c", Type: k
 func TestSettingsEditingAndRestart(t *testing.T) {
 	h := newHarness(t)
 	status, body := h.api("GET", "/api/connections", "")
-	if status != 200 || !strings.Contains(body, `"passwordEnv":"ATLAS_UNIT_PASSWORD"`) || strings.Contains(body, "unit-secret") || !strings.Contains(body, `"pendingRestart":false`) {
+	if status != 200 || !strings.Contains(body, `"passwordEnv":"SULCATA_UNIT_PASSWORD"`) || strings.Contains(body, "unit-secret") || !strings.Contains(body, `"pendingRestart":false`) {
 		t.Fatalf("overview: %d %s", status, body)
 	}
 	add := `{"isNew":true,"connection":{"id":"store","label":"Store","driver":"mysql","host":"127.0.0.1","port":3306,"database":"sakila","user":"reader","defaultSchema":"","color":"#e5a85e","allowWrites":false,"passwordEnv":"STORE_PASSWORD","password":"store-secret"}}`

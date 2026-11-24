@@ -20,7 +20,7 @@ password_env="DB_PASSWORD"
 
 func load(t *testing.T, dir, text string, env map[string]string) (*Config, error) {
 	t.Helper()
-	path := filepath.Join(dir, "atlas.toml")
+	path := filepath.Join(dir, "sulcata.toml")
 	if err := os.WriteFile(path, []byte(text), 0o600); err != nil {
 		t.Fatal(err)
 	}

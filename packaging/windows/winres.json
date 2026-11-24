@@ -8,10 +8,10 @@
     "#1": {
       "0409": {
         "identity": {
-          "name": "AtlasSchemaDesk",
+          "name": "Sulcata",
           "version": ""
         },
-        "description": "Atlas Schema Desk",
+        "description": "Sulcata",
         "minimum-os": "win10",
         "execution-level": "as invoker",
         "ui-access": false,
@@ -38,11 +38,11 @@
         },
         "info": {
           "0409": {
-            "CompanyName": "Atlas Schema Desk",
-            "FileDescription": "Atlas Schema Desk",
+            "CompanyName": "Sulcata",
+            "FileDescription": "Sulcata",
             "LegalCopyright": "MIT License",
-            "ProductName": "Atlas Schema Desk",
-            "OriginalFilename": "atlas-schema-desk.exe"
+            "ProductName": "Sulcata",
+            "OriginalFilename": "sulcata.exe"
           }
         }
       }

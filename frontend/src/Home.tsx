@@ -1,20 +1,20 @@
 import type { CSSProperties } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { request } from "./api";
-import { useAtlas } from "./context";
+import { useSulcata } from "./context";
 import { href, stored, tableHref } from "./model";
 import type { ConnectionsOverview } from "./model";
 import { Icon } from "./Icon";
 
 export function Home() {
-  const { config, tables } = useAtlas();
+  const { config, tables } = useSulcata();
   const overview = useQuery({
     queryKey: ["connections"],
     queryFn: () =>
       request<ConnectionsOverview>("/api/connections", undefined, false),
   });
   const recent = stored<{ engine: string; schema: string; table: string }[]>(
-    "db-atlas-recent-tables",
+    "sulcata-recent-tables",
     [],
   ).flatMap((item) => {
     if (!item || typeof item !== "object") return [];

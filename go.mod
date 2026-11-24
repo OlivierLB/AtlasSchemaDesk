@@ -1,4 +1,4 @@
-module github.com/OlivierLB/AtlasSchemaDesk
+module github.com/OlivierLB/Sulcata
 
 go 1.27.4
 

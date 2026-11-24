@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/config"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/eventplan"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/model"
+	"github.com/OlivierLB/Sulcata/internal/config"
+	"github.com/OlivierLB/Sulcata/internal/eventplan"
+	"github.com/OlivierLB/Sulcata/internal/model"
 )
 
 func TestReferenceSchedulesWithoutDatabase(t *testing.T) {

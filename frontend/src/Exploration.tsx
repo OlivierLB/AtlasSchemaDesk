@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState } from "react";
-import { useAtlas } from "./context";
+import { useSulcata } from "./context";
 import { display, href, keyOf, save, stored, tableHref, tabs } from "./model";
 import type { Table } from "./model";
 import { DataView } from "./DataView";
@@ -29,7 +29,7 @@ const impactLabels = {
   probableReads: "Probablement lue (SQL dynamique)",
 };
 export function Explorer() {
-  const { route, tables, config, programs, selectedVersions } = useAtlas();
+  const { route, tables, config, programs, selectedVersions } = useSulcata();
   const table = tables.find(
     (t) =>
       t.engine === route.engine &&
@@ -153,8 +153,8 @@ function bytes(value: number) {
       : `${Math.round(value / 1024)} Ko`;
 }
 function SchemaList({ engine, schema }: { engine: string; schema: string }) {
-  const { tables, programs, impact, config } = useAtlas();
-  const storageKey = `atlas-schema-view:${engine}:${schema}`;
+  const { tables, programs, impact, config } = useSulcata();
+  const storageKey = `sulcata-schema-view:${engine}:${schema}`;
   const initial = stored(storageKey, {
     filter: "",
     column: "name",
@@ -314,7 +314,7 @@ function SchemaList({ engine, schema }: { engine: string; schema: string }) {
   );
 }
 function Columns({ table }: { table: Table }) {
-  const { notice } = useAtlas();
+  const { notice } = useSulcata();
   return (
     <>
       <p>{table.comment}</p>
@@ -372,7 +372,7 @@ function Columns({ table }: { table: Table }) {
   );
 }
 function Relations({ table }: { table: Table }) {
-  const { tables } = useAtlas();
+  const { tables } = useSulcata();
   const incoming = tables
     .filter((t) => t.engine === table.engine)
     .flatMap((t) =>
@@ -449,7 +449,7 @@ function Relations({ table }: { table: Table }) {
   );
 }
 function Neighborhood({ table }: { table: Table }) {
-  const { tables } = useAtlas();
+  const { tables } = useSulcata();
   const outgoing = tables.filter(
     (t) =>
       t.engine === table.engine &&
@@ -542,7 +542,7 @@ function Neighborhood({ table }: { table: Table }) {
   );
 }
 function TablePrograms({ table }: { table: Table }) {
-  const { impact, programs, openProgram } = useAtlas();
+  const { impact, programs, openProgram } = useSulcata();
   const data = impact(table);
   const all = Object.values(programs?.engines || {}).flatMap(
     (source) => source.programs,

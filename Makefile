@@ -1,6 +1,6 @@
 # Development shortcuts. GO can point to a toolchain outside PATH (e.g. ~/.local/go/bin/go).
 GO ?= $(shell command -v go 2>/dev/null || echo $(HOME)/.local/go/bin/go)
-BINARY := bin/atlas-schema-desk
+BINARY := bin/sulcata
 
 .PHONY: install frontend build vet test integration check clean
 
@@ -13,7 +13,7 @@ frontend:
 	npm run build --prefix frontend
 
 build:
-	$(GO) build -trimpath -o $(BINARY) ./cmd/atlas-schema-desk
+	$(GO) build -trimpath -o $(BINARY) ./cmd/sulcata
 
 vet:
 	$(GO) vet ./...

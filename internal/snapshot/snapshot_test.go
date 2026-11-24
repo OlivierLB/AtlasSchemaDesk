@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/model"
+	"github.com/OlivierLB/Sulcata/internal/model"
 )
 
 func TestSourceHashMatchesPythonFingerprint(t *testing.T) {

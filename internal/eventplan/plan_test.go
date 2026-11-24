@@ -1,7 +1,7 @@
 package eventplan
 
 import (
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/model"
+	"github.com/OlivierLB/Sulcata/internal/model"
 	"testing"
 	"time"
 )

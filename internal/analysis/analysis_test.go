@@ -6,7 +6,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/model"
+	"github.com/OlivierLB/Sulcata/internal/model"
 )
 
 func program(kind, name, body string) *model.Program {

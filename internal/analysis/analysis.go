@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/model"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/pyre"
+	"github.com/OlivierLB/Sulcata/internal/model"
+	"github.com/OlivierLB/Sulcata/internal/pyre"
 )
 
 // Row is one catalog row: values are nil, string, bool or a JSON number.

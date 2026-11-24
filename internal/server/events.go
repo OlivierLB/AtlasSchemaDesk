@@ -3,13 +3,13 @@ package server
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/catalog"
+	"github.com/OlivierLB/Sulcata/internal/catalog"
 	"os"
 	"path/filepath"
 	"time"
 
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/eventplan"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/model"
+	"github.com/OlivierLB/Sulcata/internal/eventplan"
+	"github.com/OlivierLB/Sulcata/internal/model"
 )
 
 func (a *App) eventWindow(body []byte) (eventplan.Report, error) {

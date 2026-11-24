@@ -1545,7 +1545,7 @@
     }
   },
   "info": {
-    "title": "Atlas Schema Desk",
+    "title": "Sulcata",
     "version": "0.2.0"
   },
   "openapi": "3.1.0",
@@ -1766,10 +1766,10 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-atlas-session",
+            "name": "x-sulcata-session",
             "required": true,
             "schema": {
-              "title": "X-Atlas-Session",
+              "title": "X-Sulcata-Session",
               "type": "string"
             }
           }
@@ -1855,10 +1855,10 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-atlas-session",
+            "name": "x-sulcata-session",
             "required": true,
             "schema": {
-              "title": "X-Atlas-Session",
+              "title": "X-Sulcata-Session",
               "type": "string"
             }
           }
@@ -2307,10 +2307,10 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-atlas-session",
+            "name": "x-sulcata-session",
             "required": true,
             "schema": {
-              "title": "X-Atlas-Session",
+              "title": "X-Sulcata-Session",
               "type": "string"
             }
           }
@@ -2379,10 +2379,10 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-atlas-session",
+            "name": "x-sulcata-session",
             "required": true,
             "schema": {
-              "title": "X-Atlas-Session",
+              "title": "X-Sulcata-Session",
               "type": "string"
             }
           }
@@ -2458,10 +2458,10 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-atlas-session",
+            "name": "x-sulcata-session",
             "required": true,
             "schema": {
-              "title": "X-Atlas-Session",
+              "title": "X-Sulcata-Session",
               "type": "string"
             }
           }
@@ -2537,10 +2537,10 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-atlas-session",
+            "name": "x-sulcata-session",
             "required": true,
             "schema": {
-              "title": "X-Atlas-Session",
+              "title": "X-Sulcata-Session",
               "type": "string"
             }
           }
@@ -2626,10 +2626,10 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-atlas-session",
+            "name": "x-sulcata-session",
             "required": true,
             "schema": {
-              "title": "X-Atlas-Session",
+              "title": "X-Sulcata-Session",
               "type": "string"
             }
           }
@@ -2715,10 +2715,10 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-atlas-session",
+            "name": "x-sulcata-session",
             "required": true,
             "schema": {
-              "title": "X-Atlas-Session",
+              "title": "X-Sulcata-Session",
               "type": "string"
             }
           }
@@ -2804,7 +2804,7 @@
         "parameters": [
           {
             "in": "header",
-            "name": "x-atlas-session",
+            "name": "x-sulcata-session",
             "required": false,
             "schema": {
               "anyOf": [
@@ -2815,7 +2815,7 @@
                   "type": "null"
                 }
               ],
-              "title": "X-Atlas-Session"
+              "title": "X-Sulcata-Session"
             }
           }
         ],

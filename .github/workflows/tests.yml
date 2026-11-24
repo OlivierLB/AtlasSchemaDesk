@@ -41,8 +41,8 @@ jobs:
       - run: python scripts/check_public.py
       - run: bash tests/run.sh
       - run: python tests/ui_event_window.py
-      - run: python scripts/check_distribution.py bin/atlas-schema-desk
-      - run: docker build -t atlas-schema-desk:test .
+      - run: python scripts/check_distribution.py bin/sulcata
+      - run: docker build -t sulcata:test .
       - run: python scripts/check_docker.py
   windows:
     # install.ps1 from scratch on a real Windows host, with Windows PowerShell 5.1.
@@ -56,7 +56,7 @@ jobs:
       - name: Binary runs and loads the generated configuration
         shell: powershell
         run: |
-          bin\atlas-schema-desk.exe version
+          bin\sulcata.exe version
           if ($LASTEXITCODE -ne 0) { exit 1 }
-          bin\atlas-schema-desk.exe inspect --config atlas.toml
+          bin\sulcata.exe inspect --config sulcata.toml
           if ($LASTEXITCODE -ne 0) { exit 1 }

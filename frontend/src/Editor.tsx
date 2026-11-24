@@ -41,7 +41,7 @@ export function Editor({
     if (!node.current) return;
     const instance = CodeMirror.fromTextArea(node.current, {
       mode: driver === "mysql" ? "text/x-mysql" : "text/x-pgsql",
-      theme: "atlas",
+      theme: "sulcata",
       lineNumbers: true,
       matchBrackets: true,
       autoCloseBrackets: true,

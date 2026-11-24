@@ -27,7 +27,7 @@ func freeBytes(dir string) (uint64, error) {
 }
 
 // shellCommand runs a trusted restore_command through cmd.exe, so variables
-// are written %ATLAS_DUMP_PATH% and %ATLAS_CONNECTION%. The command line is
+// are written %SULCATA_DUMP_PATH% and %SULCATA_CONNECTION%. The command line is
 // passed verbatim: Go's argument escaping does not match cmd.exe quoting.
 func shellCommand(command string) *exec.Cmd {
 	shell := os.Getenv("ComSpec")

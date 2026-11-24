@@ -14,11 +14,11 @@ import (
 // caller must exit (not restart) so the installer can replace the executable.
 func Install(asset []byte, _ string) (restart bool, err error) {
 	executable := WindowsInstallPath()
-	dir, err := os.MkdirTemp("", "atlas-schema-desk-update-")
+	dir, err := os.MkdirTemp("", "sulcata-update-")
 	if err != nil {
 		return false, err
 	}
-	setup := filepath.Join(dir, "atlas-schema-desk-setup.exe")
+	setup := filepath.Join(dir, "sulcata-setup.exe")
 	if err := os.WriteFile(setup, asset, 0o700); err != nil {
 		return false, err
 	}

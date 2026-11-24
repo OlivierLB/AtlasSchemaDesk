@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ApiError, request } from "./api";
-import { useAtlas } from "./context";
+import { useSulcata } from "./context";
 import { display, errorText, href, save, stored } from "./model";
 import type { Session, SqlResponse, Table } from "./model";
 import { Editor } from "./Editor";
@@ -27,7 +27,7 @@ export function SqlConsole({
     refreshSession,
     impact,
     programs,
-  } = useAtlas();
+  } = useSulcata();
   const client = useQueryClient();
   const busy = useRef<Record<string, boolean>>({});
   const state = sql[engine] || { text: "", running: false };
@@ -42,7 +42,7 @@ export function SqlConsole({
   const text = sql[engine]?.text ?? defaultSql;
   const [history, setHistory] = useState(() =>
     stored<{ engine: string; sql: string; at?: string }[]>(
-      "db-atlas-sql-history",
+      "sulcata-sql-history",
       [],
     ),
   );
@@ -71,7 +71,7 @@ export function SqlConsole({
             (item) => item.engine !== engine || item.sql !== text,
           ),
         ].slice(0, 50);
-        save("db-atlas-sql-history", entries);
+        save("sulcata-sql-history", entries);
         setHistory(entries);
         await client.invalidateQueries({ queryKey: ["rows", sessionId] });
       }

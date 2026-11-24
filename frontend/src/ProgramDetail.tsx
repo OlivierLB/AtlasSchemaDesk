@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useAtlas } from "./context";
+import { useSulcata } from "./context";
 import { tableHref } from "./model";
 import type { Program, Programs } from "./model";
 import { Icon } from "./Icon";
@@ -23,7 +23,7 @@ export function ProgramDetail({
   close: () => void;
   catalog?: Programs;
 }) {
-  const { programs, tables, config, openProgram, notice } = useAtlas();
+  const { programs, tables, config, openProgram, notice } = useSulcata();
   const [tab, setTab] = useState("code");
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => {

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { request } from "./api";
-import { useAtlas } from "./context";
+import { useSulcata } from "./context";
 import { errorText, tableHref } from "./model";
 import type { EventWindowReport, Program, Programs } from "./model";
 import {
@@ -29,7 +29,7 @@ export function EventWindow({
     config,
     openProgram: open,
     tables,
-  } = useAtlas();
+  } = useSulcata();
   const programs = catalog || localPrograms;
   const openProgram = (program: Program) => open(program, catalog);
   const now = new Date();

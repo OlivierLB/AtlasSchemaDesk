@@ -11,11 +11,11 @@ import (
 // Install replaces executable with the binary of a Linux release archive.
 // It reports that the application must restart to run the new version.
 func Install(asset []byte, executable string) (restart bool, err error) {
-	binary, err := extractBinary(asset, "atlas-schema-desk")
+	binary, err := extractBinary(asset, "sulcata")
 	if err != nil {
 		return false, err
 	}
-	next, err := os.CreateTemp(filepath.Dir(executable), ".atlas-schema-desk.update-")
+	next, err := os.CreateTemp(filepath.Dir(executable), ".sulcata.update-")
 	if err != nil {
 		return false, fmt.Errorf("dossier de l'application non modifiable : %w", err)
 	}

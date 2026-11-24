@@ -2,7 +2,7 @@ package server
 
 import (
 	"encoding/json"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/config"
+	"github.com/OlivierLB/Sulcata/internal/config"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -39,7 +39,7 @@ func TestEventWindowUsesOnlyCachedCatalog(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(h.app.Config.DataDir, "programs.json"), []byte(fixture), 0600); err != nil {
 		t.Fatal(err)
 	}
-	status, body := h.do("POST", "/api/events/window", `{"from":"2026-11-23T10:00:00Z","to":"2026-11-23T11:00:00Z","lookbackMinutes":30}`, map[string]string{"X-DB-Atlas": "1"})
+	status, body := h.do("POST", "/api/events/window", `{"from":"2026-11-23T10:00:00Z","to":"2026-11-23T11:00:00Z","lookbackMinutes":30}`, map[string]string{"X-Sulcata": "1"})
 	if status != http.StatusOK || !strings.Contains(body, `"starts":4`) || strings.Contains(body, "unknown:event") {
 		t.Fatalf("projection: %d %s", status, body)
 	}

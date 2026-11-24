@@ -2,7 +2,7 @@
 
 Usage: python3 scripts/bench_backend.py PORT -- SERVER COMMAND...
 Example:
-  python3 scripts/bench_backend.py 18770 -- bin/atlas-schema-desk --config .local/test.toml --port 18770
+  python3 scripts/bench_backend.py 18770 -- bin/sulcata --config .local/test.toml --port 18770
 
 Rerunnable; only issues read-only requests (SELECT, data grid) on the
 configured connections. Requires the server's first connection to be readable.
@@ -18,9 +18,9 @@ from pathlib import Path
 
 
 def call(base, path, body=None, session=None):
-    headers = {"X-Atlas-Session": session} if session else {}
+    headers = {"X-Sulcata-Session": session} if session else {}
     if body is not None:
-        headers |= {"Content-Type": "application/json", "X-DB-Atlas": "1"}
+        headers |= {"Content-Type": "application/json", "X-Sulcata": "1"}
     request = urllib.request.Request(base + path, data=json.dumps(body).encode() if body is not None else None, headers=headers)
     with urllib.request.urlopen(request, timeout=30) as response:
         return json.load(response)

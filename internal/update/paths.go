@@ -8,7 +8,7 @@ import (
 
 // WindowsInstallPath is where the Windows installer (per user) puts the executable.
 func WindowsInstallPath() string {
-	return filepath.Join(os.Getenv("LOCALAPPDATA"), "Programs", "Atlas Schema Desk", "atlas-schema-desk.exe")
+	return filepath.Join(os.Getenv("LOCALAPPDATA"), "Programs", "Sulcata", "sulcata.exe")
 }
 
 // SelfUpdatable reports whether this executable can install updates: on
@@ -23,7 +23,7 @@ func SelfUpdatable(goos, executable string) bool {
 
 // Writable reports whether files can be created next to executable.
 func Writable(executable string) bool {
-	probe, err := os.CreateTemp(filepath.Dir(executable), ".atlas-schema-desk.probe-")
+	probe, err := os.CreateTemp(filepath.Dir(executable), ".sulcata.probe-")
 	if err != nil {
 		return false
 	}

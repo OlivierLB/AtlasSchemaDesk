@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/config"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/db"
+	"github.com/OlivierLB/Sulcata/internal/config"
+	"github.com/OlivierLB/Sulcata/internal/db"
 )
 
 type fakeClock struct {
@@ -22,7 +22,7 @@ func (c *fakeClock) set(v float64) { c.mu.Lock(); c.now = v; c.mu.Unlock() }
 func manager(t *testing.T) (*Manager, *fakeClock) {
 	root := t.TempDir()
 	cfg := &config.Config{
-		Path:               filepath.Join(root, "atlas.toml"),
+		Path:               filepath.Join(root, "sulcata.toml"),
 		Connections:        []config.Connection{{ID: "library", Driver: "postgresql", Host: "127.0.0.1", Port: 5432, Password: "unit-secret"}},
 		DataDir:            filepath.Join(root, "data"),
 		SessionIdleSeconds: 1800,

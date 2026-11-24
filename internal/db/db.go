@@ -13,10 +13,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/analysis"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/config"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/pyre"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/sqlconsole"
+	"github.com/OlivierLB/Sulcata/internal/analysis"
+	"github.com/OlivierLB/Sulcata/internal/config"
+	"github.com/OlivierLB/Sulcata/internal/pyre"
+	"github.com/OlivierLB/Sulcata/internal/sqlconsole"
 )
 
 // ErrValidation marks errors caused by the request rather than the database.
@@ -234,16 +234,16 @@ func (d *Database) guarded(run func() error) error {
 	if !d.pg() || !d.tx.Load() {
 		return run()
 	}
-	if err := d.command("SAVEPOINT atlas_read"); err != nil {
+	if err := d.command("SAVEPOINT sulcata_read"); err != nil {
 		return err
 	}
 	err := run()
 	if err != nil {
-		if rollback := d.command("ROLLBACK TO SAVEPOINT atlas_read"); rollback != nil {
+		if rollback := d.command("ROLLBACK TO SAVEPOINT sulcata_read"); rollback != nil {
 			return errors.Join(err, rollback)
 		}
 	}
-	if release := d.command("RELEASE SAVEPOINT atlas_read"); release != nil && err == nil {
+	if release := d.command("RELEASE SAVEPOINT sulcata_read"); release != nil && err == nil {
 		return release
 	}
 	return err
@@ -441,7 +441,7 @@ func (d *Database) SQL(statements []Statement, params []any) (outcome *SQLOutcom
 		}
 		save := d.pg() && d.tx.Load()
 		if save {
-			if err := d.command("SAVEPOINT atlas_statement"); err != nil {
+			if err := d.command("SAVEPOINT sulcata_statement"); err != nil {
 				return nil, err
 			}
 		}
@@ -466,7 +466,7 @@ func (d *Database) SQL(statements []Statement, params []any) (outcome *SQLOutcom
 			}
 			outcome.Results = append(outcome.Results, entry)
 			if save {
-				if err := d.command("RELEASE SAVEPOINT atlas_statement"); err != nil {
+				if err := d.command("RELEASE SAVEPOINT sulcata_statement"); err != nil {
 					return nil, err
 				}
 			}
@@ -475,10 +475,10 @@ func (d *Database) SQL(statements []Statement, params []any) (outcome *SQLOutcom
 				return nil, runErr
 			}
 			if save {
-				if err := d.command("ROLLBACK TO SAVEPOINT atlas_statement"); err != nil {
+				if err := d.command("ROLLBACK TO SAVEPOINT sulcata_statement"); err != nil {
 					return nil, err
 				}
-				if err := d.command("RELEASE SAVEPOINT atlas_statement"); err != nil {
+				if err := d.command("RELEASE SAVEPOINT sulcata_statement"); err != nil {
 					return nil, err
 				}
 			}

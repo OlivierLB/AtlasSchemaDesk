@@ -30,7 +30,7 @@ def private_path(name):
     path = Path(name)
     if name == ".env.example":
         return False
-    return (path.name == "atlas.toml" or path.name.startswith(".env")
+    return (path.name == "sulcata.toml" or path.name.startswith(".env")
             or path.name.endswith((".local.toml", ".toml.previous"))
             or ".candidate-" in path.name
             or path.suffix in {".sql", ".gz", ".dump", ".log", ".pem", ".key", ".db"}

@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/db"
+	"github.com/OlivierLB/Sulcata/internal/db"
 )
 
 type openAPI struct {
@@ -97,7 +97,7 @@ func TestResponsesMatchContractSchemas(t *testing.T) {
 	if strings.Contains(body, "unit-secret") {
 		t.Fatalf("connections overview leaks the password: %s", body)
 	}
-	_, body = h.do("POST", "/api/sessions", "{}", map[string]string{"X-DB-Atlas": "1"})
+	_, body = h.do("POST", "/api/sessions", "{}", map[string]string{"X-Sulcata": "1"})
 	checkShape(t, contract, "NewSession", body)
 	_, body = h.api("GET", "/api/sessions/current", "")
 	checkShape(t, contract, "SessionStatus", body)

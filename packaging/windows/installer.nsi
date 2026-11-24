@@ -1,6 +1,6 @@
-; Atlas Schema Desk installer for Windows (per-user: no administrator rights,
+; Sulcata installer for Windows (per-user: no administrator rights,
 ; so in-app updates run silently). Built on Linux or Windows with:
-;   makensis -DVERSION=x.y.z -DBINARY=path\atlas-schema-desk.exe
+;   makensis -DVERSION=x.y.z -DBINARY=path\sulcata.exe
 ;            -DWEBVIEW2=path\MicrosoftEdgeWebview2Setup.exe -DOUTFILE=setup.exe installer.nsi
 ; Silent mode (/S) is what the in-app update uses.
 
@@ -11,18 +11,18 @@ SetCompressor /SOLID lzma
   !error "Pass -DVERSION=x.y.z"
 !endif
 !ifndef BINARY
-  !error "Pass -DBINARY=path to atlas-schema-desk.exe"
+  !error "Pass -DBINARY=path to sulcata.exe"
 !endif
 !ifndef WEBVIEW2
   !error "Pass -DWEBVIEW2=path to MicrosoftEdgeWebview2Setup.exe"
 !endif
 !ifndef OUTFILE
-  !define OUTFILE "atlas-schema-desk_windows_amd64_setup.exe"
+  !define OUTFILE "sulcata_windows_amd64_setup.exe"
 !endif
 
-!define APP "Atlas Schema Desk"
-!define EXE "atlas-schema-desk.exe"
-!define UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\AtlasSchemaDesk"
+!define APP "Sulcata"
+!define EXE "sulcata.exe"
+!define UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\Sulcata"
 !define WEBVIEW2_KEY "Software\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}"
 
 Name "${APP}"
@@ -105,7 +105,7 @@ ready:
   Call EnsureWebView2
 SectionEnd
 
-; The configuration (%APPDATA%\atlas-schema-desk) is kept on purpose.
+; The configuration (%APPDATA%\sulcata) is kept on purpose.
 Section "Uninstall"
   ; The application must be closed: otherwise its executable cannot go and
   ; the shortcuts and registration must stay.

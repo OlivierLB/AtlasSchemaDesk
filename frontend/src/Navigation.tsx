@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
-import { useAtlas } from "./context";
+import { useSulcata } from "./context";
 import { href, keyOf, tableHref } from "./model";
 import { Icon } from "./Icon";
 
@@ -17,7 +17,7 @@ export function Navigation({
   onVersions: () => void;
   onNavigate: () => void;
 }) {
-  const { route, config, tables } = useAtlas();
+  const { route, config, tables } = useSulcata();
   const routeKey = `${route.engine || ""}:${route.schema || ""}:${route.table || ""}`;
   const [expanded, setExpanded] = useState<{
     routeKey: string;

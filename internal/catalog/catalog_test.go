@@ -6,8 +6,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/config"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/model"
+	"github.com/OlivierLB/Sulcata/internal/config"
+	"github.com/OlivierLB/Sulcata/internal/model"
 )
 
 func latin1(text string) []byte {

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/config"
+	"github.com/OlivierLB/Sulcata/internal/config"
 )
 
 func setup(t *testing.T, restore string) (*config.Config, string) {
@@ -33,7 +33,7 @@ path="backups"
 pattern="*.sql"
 local_path="current.sql"
 restore_command=` + "'" + restore + "'\n"
-	path := filepath.Join(root, "atlas.toml")
+	path := filepath.Join(root, "sulcata.toml")
 	if err := os.WriteFile(path, []byte(text), 0o600); err != nil {
 		t.Fatal(err)
 	}
@@ -88,7 +88,7 @@ func TestFailedRestorePreservesPreviousDump(t *testing.T) {
 }
 
 func TestSuccessPromotesDumpAfterCommandAndExports(t *testing.T) {
-	cfg, root := setup(t, `test -s "$ATLAS_DUMP_PATH" && test "$ATLAS_CONNECTION" = library`)
+	cfg, root := setup(t, `test -s "$SULCATA_DUMP_PATH" && test "$SULCATA_CONNECTION" = library`)
 	calls := noExport(t)
 	versions, _ := Versions(cfg.DumpSources[0])
 	if err := Apply(cfg, "library", versions[0].VersionID); err != nil {

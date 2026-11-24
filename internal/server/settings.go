@@ -5,9 +5,9 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/config"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/sessions"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/settings"
+	"github.com/OlivierLB/Sulcata/internal/config"
+	"github.com/OlivierLB/Sulcata/internal/sessions"
+	"github.com/OlivierLB/Sulcata/internal/settings"
 )
 
 // connectionsOverview is the saved configuration and whether the running

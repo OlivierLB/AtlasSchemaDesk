@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const lock = JSON.parse(readFileSync(resolve(root, 'package-lock.json'), 'utf8'));
-const notices = ['Atlas Schema Desk — bundled browser dependencies\n'];
+const notices = ['Sulcata — bundled browser dependencies\n'];
 for (const [path, entry] of Object.entries(lock.packages)) {
   if (!path || entry.dev || entry.devOptional) continue;
   const directory = resolve(root, path);

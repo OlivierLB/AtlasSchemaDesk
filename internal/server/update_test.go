@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/update"
+	"github.com/OlivierLB/Sulcata/internal/update"
 )
 
 func TestUpdateInstallFlow(t *testing.T) {

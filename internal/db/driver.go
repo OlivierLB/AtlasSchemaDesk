@@ -3,7 +3,7 @@ package db
 import (
 	"unicode/utf8"
 
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/analysis"
+	"github.com/OlivierLB/Sulcata/internal/analysis"
 )
 
 // maxCellRunes bounds the text returned for one cell.

@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/analysis"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/config"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/model"
+	"github.com/OlivierLB/Sulcata/internal/analysis"
+	"github.com/OlivierLB/Sulcata/internal/config"
+	"github.com/OlivierLB/Sulcata/internal/model"
 )
 
 // ReferenceCatalog is read from local source files, independently of any DB.

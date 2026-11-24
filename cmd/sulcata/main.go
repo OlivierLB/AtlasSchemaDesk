@@ -1,11 +1,11 @@
-// Command atlas-schema-desk is a local PostgreSQL and MySQL schema, routine and
+// Command sulcata is a local PostgreSQL and MySQL schema, routine and
 // data explorer.
 //
-//	atlas-schema-desk [--config atlas.toml] [--port N] [--bind ADDRESS] [--open] [--headless]
-//	atlas-schema-desk export --config atlas.toml
-//	atlas-schema-desk dumps --config atlas.toml list|apply CONNECTION VERSION
-//	atlas-schema-desk check --config atlas.toml
-//	atlas-schema-desk inspect --config atlas.toml
+//	sulcata [--config sulcata.toml] [--port N] [--bind ADDRESS] [--open] [--headless]
+//	sulcata export --config sulcata.toml
+//	sulcata dumps --config sulcata.toml list|apply CONNECTION VERSION
+//	sulcata check --config sulcata.toml
+//	sulcata inspect --config sulcata.toml
 package main
 
 import (
@@ -26,13 +26,13 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/catalog"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/config"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/db"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/dumps"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/server"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/update"
-	"github.com/OlivierLB/AtlasSchemaDesk/web"
+	"github.com/OlivierLB/Sulcata/internal/catalog"
+	"github.com/OlivierLB/Sulcata/internal/config"
+	"github.com/OlivierLB/Sulcata/internal/db"
+	"github.com/OlivierLB/Sulcata/internal/dumps"
+	"github.com/OlivierLB/Sulcata/internal/server"
+	"github.com/OlivierLB/Sulcata/internal/update"
+	"github.com/OlivierLB/Sulcata/web"
 )
 
 // version is set at build time with -ldflags "-X main.version=…".
@@ -51,9 +51,9 @@ func main() {
 }
 
 func run(command string, args []string, stdout, stderr io.Writer) int {
-	flags := flag.NewFlagSet("atlas-schema-desk "+command, flag.ContinueOnError)
+	flags := flag.NewFlagSet("sulcata "+command, flag.ContinueOnError)
 	flags.SetOutput(stderr)
-	path := flags.String("config", "", "configuration file (default: ./atlas.toml if present, else the user configuration directory)")
+	path := flags.String("config", "", "configuration file (default: ./sulcata.toml if present, else the user configuration directory)")
 	port := flags.Int("port", 0, "HTTP port (overrides the configuration)")
 	bind := flags.String("bind", "", "bind address: 127.0.0.1, localhost or 0.0.0.0 (Docker)")
 	open := flags.Bool("open", false, "open the interface in the browser once started")
@@ -71,14 +71,14 @@ func run(command string, args []string, stdout, stderr io.Writer) int {
 		// Only a server started without --config creates the starter file.
 		if command == "serve" {
 			if err := ensureConfig(configPath, stderr); err != nil {
-				fmt.Fprintf(stderr, "atlas-schema-desk: %v\n", err)
+				fmt.Fprintf(stderr, "sulcata: %v\n", err)
 				return 1
 			}
 		}
 	}
 	cfg, err := config.Load(configPath, nil)
 	if err != nil {
-		fmt.Fprintf(stderr, "atlas-schema-desk: %v\n", err)
+		fmt.Fprintf(stderr, "sulcata: %v\n", err)
 		return 2
 	}
 	switch command {
@@ -93,7 +93,7 @@ func run(command string, args []string, stdout, stderr io.Writer) int {
 	}
 	if *port != 0 {
 		if *port < 1 || *port > 65535 {
-			fmt.Fprintln(stderr, "atlas-schema-desk: invalid server port")
+			fmt.Fprintln(stderr, "sulcata: invalid server port")
 			return 2
 		}
 		cfg.Port = *port
@@ -102,7 +102,7 @@ func run(command string, args []string, stdout, stderr io.Writer) int {
 		cfg.Bind = *bind
 	}
 	if !config.ValidBind(cfg.Bind) {
-		fmt.Fprintln(stderr, "atlas-schema-desk: unsupported bind address")
+		fmt.Fprintln(stderr, "sulcata: unsupported bind address")
 		return 2
 	}
 	window := desktopBuild && !*headless && cfg.Bind != "0.0.0.0"
@@ -127,7 +127,7 @@ func dumpsCommand(cfg *config.Config, args []string, stdout io.Writer) int {
 	case len(args) == 3 && args[0] == "apply":
 		return report(cfg, stdout, dumps.Apply(cfg, args[1], args[2]))
 	}
-	fmt.Fprintln(stdout, "usage: atlas-schema-desk dumps --config FILE list | apply CONNECTION VERSION")
+	fmt.Fprintln(stdout, "usage: sulcata dumps --config FILE list | apply CONNECTION VERSION")
 	return 2
 }
 
@@ -189,7 +189,7 @@ type outcome struct {
 func serve(cfg *config.Config, window, browser bool, stderr io.Writer) int {
 	executable, err := os.Executable()
 	if err != nil {
-		fmt.Fprintf(stderr, "atlas-schema-desk: %v\n", err)
+		fmt.Fprintf(stderr, "sulcata: %v\n", err)
 		return 1
 	}
 	url := fmt.Sprintf("http://localhost:%d", cfg.Port)
@@ -198,7 +198,7 @@ func serve(cfg *config.Config, window, browser bool, stderr io.Writer) int {
 		// A second desktop launch (or --open) shows the running instance; a
 		// plain server keeps failing so supervisors see the port conflict.
 		if (window || browser) && runningInstance(url) {
-			fmt.Fprintf(stderr, "Atlas Schema Desk est déjà lancé sur %s\n", url)
+			fmt.Fprintf(stderr, "Sulcata est déjà lancé sur %s\n", url)
 			if !window || runWindow(url, nil) != nil {
 				openBrowser(url, stderr)
 			}
@@ -215,17 +215,17 @@ func serve(cfg *config.Config, window, browser bool, stderr io.Writer) int {
 			}
 		}
 		if err != nil {
-			fmt.Fprintf(stderr, "atlas-schema-desk: %v\n", err)
+			fmt.Fprintf(stderr, "sulcata: %v\n", err)
 			return 1
 		}
 	}
 	app, err := server.New(cfg, nil, executable, web.FS())
 	if err != nil {
 		listener.Close()
-		fmt.Fprintf(stderr, "atlas-schema-desk: %v\n", err)
+		fmt.Fprintf(stderr, "sulcata: %v\n", err)
 		return 1
 	}
-	fmt.Printf("Atlas Schema Desk: %s\n", url)
+	fmt.Printf("Sulcata: %s\n", url)
 	app.Restart, app.Quit = make(chan struct{}, 1), make(chan struct{}, 1)
 	app.Updates = updater(executable)
 	httpServer := &http.Server{Handler: app.Handler(), ReadHeaderTimeout: 10 * time.Second}
@@ -248,7 +248,7 @@ func serve(cfg *config.Config, window, browser bool, stderr io.Writer) int {
 			ended <- outcome{}
 		case err := <-failed:
 			if !errors.Is(err, http.ErrServerClosed) {
-				fmt.Fprintf(stderr, "atlas-schema-desk: %v\n", err)
+				fmt.Fprintf(stderr, "sulcata: %v\n", err)
 				ended <- outcome{code: 1}
 				return
 			}
@@ -267,18 +267,18 @@ func serve(cfg *config.Config, window, browser bool, stderr io.Writer) int {
 		// it must not open a second browser tab.
 		_ = os.Setenv(restartedEnv, "1")
 		if err := restartProcess(executable); err != nil {
-			fmt.Fprintf(stderr, "atlas-schema-desk: restart failed: %v\n", err)
+			fmt.Fprintf(stderr, "sulcata: restart failed: %v\n", err)
 			return 1
 		}
 	}
 	return result.code
 }
 
-// updater checks GitHub releases unless ATLAS_NO_UPDATE_CHECK is set. Only an
+// updater checks GitHub releases unless SULCATA_NO_UPDATE_CHECK is set. Only an
 // installed desktop build installs updates (see update.SelfUpdatable); other
 // builds just show that a new version exists.
 func updater(executable string) *update.Updater {
-	if os.Getenv("ATLAS_NO_UPDATE_CHECK") != "" {
+	if os.Getenv("SULCATA_NO_UPDATE_CHECK") != "" {
 		return nil
 	}
 	asset := ""
@@ -286,7 +286,7 @@ func updater(executable string) *update.Updater {
 		asset = update.AssetName(runtime.GOOS, runtime.GOARCH)
 	}
 	updates := update.New(version, asset)
-	if api := os.Getenv("ATLAS_UPDATE_API"); api != "" {
+	if api := os.Getenv("SULCATA_UPDATE_API"); api != "" {
 		updates.API = api // smoke tests serve a fake release
 	}
 	return updates
@@ -317,7 +317,7 @@ func waitForEnd(url string, window, browser bool, ended chan outcome, stderr io.
 		if err == nil {
 			return outcome{} // the user closed the window
 		}
-		fmt.Fprintf(stderr, "atlas-schema-desk: fenêtre indisponible (%v), ouverture dans le navigateur\n", err)
+		fmt.Fprintf(stderr, "sulcata: fenêtre indisponible (%v), ouverture dans le navigateur\n", err)
 		openBrowser(url, stderr)
 		<-quit
 		mu.Lock()

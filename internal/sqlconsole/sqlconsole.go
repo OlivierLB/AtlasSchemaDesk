@@ -7,7 +7,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/pyre"
+	"github.com/OlivierLB/Sulcata/internal/pyre"
 )
 
 // Statement kinds: read (no transaction needed), write (runs in the open

@@ -17,12 +17,12 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/config"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/db"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/jobs"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/sessions"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/settings"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/update"
+	"github.com/OlivierLB/Sulcata/internal/config"
+	"github.com/OlivierLB/Sulcata/internal/db"
+	"github.com/OlivierLB/Sulcata/internal/jobs"
+	"github.com/OlivierLB/Sulcata/internal/sessions"
+	"github.com/OlivierLB/Sulcata/internal/settings"
+	"github.com/OlivierLB/Sulcata/internal/update"
 )
 
 const maxBody = 1 << 20
@@ -237,9 +237,9 @@ func (a *App) Handler() http.Handler {
 }
 
 func sessionID(r *http.Request) (string, error) {
-	id := r.Header.Get("X-Atlas-Session")
+	id := r.Header.Get("X-Sulcata-Session")
 	if id == "" {
-		return "", &requestError{[]string{"header.x-atlas-session"}}
+		return "", &requestError{[]string{"header.x-sulcata-session"}}
 	}
 	return id, nil
 }
@@ -301,7 +301,7 @@ type statusResponse struct {
 
 func (a *App) status(r *http.Request) (int, any, error) {
 	response := statusResponse{Status: a.Export.Status(), S3: a.Dumps.Status(), Apply: a.Restore.Status(), Transactions: map[string]bool{}}
-	if id := r.Header.Get("X-Atlas-Session"); id != "" {
+	if id := r.Header.Get("X-Sulcata-Session"); id != "" {
 		state, err := a.Sessions.Status(id)
 		if err != nil {
 			return 0, nil, err
@@ -378,8 +378,8 @@ func (a *App) boundary(next http.Handler) http.Handler {
 		if !hosts[r.Host] {
 			reject = "Hôte non autorisé"
 		} else if r.Method != http.MethodGet && r.Method != http.MethodHead && r.Method != http.MethodOptions {
-			if r.Header.Get("X-DB-Atlas") != "1" {
-				reject = "En-tête X-DB-Atlas manquant"
+			if r.Header.Get("X-Sulcata") != "1" {
+				reject = "En-tête X-Sulcata manquant"
 			}
 			if origin := r.Header.Get("Origin"); origin != "" && origin != "http://"+r.Host {
 				reject = "Origine non autorisée"

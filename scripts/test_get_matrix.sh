@@ -13,7 +13,7 @@ set -euo pipefail
 root=$(cd "$(dirname "$0")/.." && pwd)
 dist=$(cd "${1:?usage: scripts/test_get_matrix.sh DIST_DIR [DISTRIBUTION...]}" && pwd)
 shift
-[[ -f $dist/atlas-schema-desk_linux_amd64.tar.gz && -f $dist/SHA256SUMS ]] || { echo "Fichiers de release absents de $dist" >&2; exit 1; }
+[[ -f $dist/sulcata_linux_amd64.tar.gz && -f $dist/SHA256SUMS ]] || { echo "Fichiers de release absents de $dist" >&2; exit 1; }
 
 # Image and the root command that gives it what any desktop already has
 # (curl, sudo, CA certificates) plus Xvfb for the test.
@@ -31,13 +31,13 @@ order=(ubuntu:22.04 ubuntu:24.04 debian:12 debian:13 fedora:42 archlinux:latest 
 
 check='
 set -euo pipefail
-export HOME=/home/user PATH=/usr/local/bin:/usr/bin:/bin ATLAS_RELEASE_URL=file:///dist ATLAS_NO_UPDATE_CHECK=1
+export HOME=/home/user PATH=/usr/local/bin:/usr/bin:/bin SULCATA_RELEASE_URL=file:///dist SULCATA_NO_UPDATE_CHECK=1
 # Exactly like `curl ... | bash -s -- --yes`: the script arrives on stdin.
 cat /get.sh | bash -s -- --yes
-app=$HOME/.local/share/atlas-schema-desk/app/atlas-schema-desk
+app=$HOME/.local/share/sulcata/app/sulcata
 missing=$(ldd "$app" | grep "not found" || true)
 [[ -z $missing ]] || { echo "Bibliothèques manquantes : $missing"; exit 1; }
-test -f $HOME/.local/share/applications/atlas-schema-desk.desktop
+test -f $HOME/.local/share/applications/sulcata.desktop
 Xvfb :42 -screen 0 1280x800x24 >/tmp/xvfb.log 2>&1 &
 sleep 1
 DISPLAY=:42 "$app" --port 8791 >/tmp/app.log 2>&1 &
@@ -51,10 +51,10 @@ sleep 3
 if ((ok == 0)) || ! kill -0 $pid 2>/dev/null; then echo "La fenêtre ne démarre pas :"; cat /tmp/app.log; exit 1; fi
 kill $pid
 sleep 1
-test -d $HOME/.local/share/atlas-schema-desk/storage || { echo "Profil WebKit absent"; exit 1; }
+test -d $HOME/.local/share/sulcata/storage || { echo "Profil WebKit absent"; exit 1; }
 cat /get.sh | bash -s -- --uninstall >/dev/null
 test ! -e "$app"
-test -d $HOME/.local/share/atlas-schema-desk/storage || { echo "La désinstallation a effacé les données de la fenêtre"; exit 1; }
+test -d $HOME/.local/share/sulcata/storage || { echo "La désinstallation a effacé les données de la fenêtre"; exit 1; }
 echo "OK : installation (curl | bash), bibliothèques, fenêtre, désinstallation (données conservées)"
 '
 

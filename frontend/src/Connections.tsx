@@ -4,7 +4,7 @@ import { Icon } from "./Icon";
 import type { FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { request } from "./api";
-import { useAtlas } from "./context";
+import { useSulcata } from "./context";
 import { errorText } from "./model";
 import type {
   ConnectionInput,
@@ -37,7 +37,7 @@ function emptyConnection(): ConnectionInput {
 }
 
 const passwordVariable = (id: string) =>
-  `ATLAS_${id.toUpperCase().replace(/[^A-Z0-9]/g, "_")}_PASSWORD`;
+  `SULCATA_${id.toUpperCase().replace(/[^A-Z0-9]/g, "_")}_PASSWORD`;
 
 async function waitForRestart() {
   // The server re-executes itself; wait until it answers with the new
@@ -60,7 +60,7 @@ async function waitForRestart() {
 }
 
 export function Connections() {
-  const { tables, status, notice, route } = useAtlas();
+  const { tables, status, notice, route } = useSulcata();
   const client = useQueryClient();
   const overview = useQuery({
     queryKey: ["connections"],

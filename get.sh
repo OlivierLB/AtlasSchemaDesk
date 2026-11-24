@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
-# Installs the Atlas Schema Desk desktop app for the current Linux user from
+# Installs the Sulcata desktop app for the current Linux user from
 # the latest GitHub release, with no build tools:
 #
-#   curl -fsSL https://raw.githubusercontent.com/OlivierLB/AtlasSchemaDesk/main/get.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/OlivierLB/Sulcata/main/get.sh | bash
 #
 # - downloads the app and checks its SHA-256 against the release's SHA256SUMS;
-# - installs it in ~/.local/share/atlas-schema-desk/app (no sudo), adds a menu
-#   entry and the atlas-schema-desk command in ~/.local/bin;
+# - installs it in ~/.local/share/sulcata/app (no sudo), adds a menu
+#   entry and the sulcata command in ~/.local/bin;
 # - installs WebKitGTK 4.1 with the package manager (sudo, after confirmation)
 #   when the system lacks it.
 # The app then updates itself from the interface. Rerunning reinstalls the
 # latest version. Uninstalling keeps the configuration
-# (~/.config/atlas-schema-desk) and the window's browser data (SQL history).
+# (~/.config/sulcata) and the window's browser data (SQL history).
 #
 # Options: --uninstall   remove the app
 #          --yes         answer yes to the WebKitGTK installation question
@@ -20,17 +20,16 @@
 # runs nothing, and commands cannot consume the rest of a piped script.
 set -euo pipefail
 
-REPO=OlivierLB/AtlasSchemaDesk
-ASSET=atlas-schema-desk_linux_amd64.tar.gz
-BASE_URL=${ATLAS_RELEASE_URL:-https://github.com/$REPO/releases/latest/download}
+REPO=OlivierLB/Sulcata
+ASSET=sulcata_linux_amd64.tar.gz
+BASE_URL=${SULCATA_RELEASE_URL:-https://github.com/$REPO/releases/latest/download}
 DATA_HOME=${XDG_DATA_HOME:-$HOME/.local/share}
 # The window's WebKit profile (localStorage, SQL history) lives in
-# $DATA_HOME/atlas-schema-desk itself: the program goes in a subfolder.
-APP_DIR=$DATA_HOME/atlas-schema-desk/app
-LEGACY_BINARY=$DATA_HOME/atlas-schema-desk/atlas-schema-desk
+# $DATA_HOME/sulcata itself: the program goes in a subfolder.
+APP_DIR=$DATA_HOME/sulcata/app
 BIN_DIR=$HOME/.local/bin
-DESKTOP_FILE=$DATA_HOME/applications/atlas-schema-desk.desktop
-ICON_FILE=$DATA_HOME/icons/hicolor/512x512/apps/atlas-schema-desk.png
+DESKTOP_FILE=$DATA_HOME/applications/sulcata.desktop
+ICON_FILE=$DATA_HOME/icons/hicolor/512x512/apps/sulcata.png
 
 step() { printf '\n\033[1m==> %s\033[0m\n' "$*"; }
 info() { printf '    %s\n' "$*"; }
@@ -44,21 +43,15 @@ refresh_menu() {
 	if command -v gtk-update-icon-cache >/dev/null; then gtk-update-icon-cache -q -t "$DATA_HOME/icons/hicolor" 2>/dev/null || true; fi
 }
 
-# Earlier versions installed the program next to the WebKit profile.
-remove_legacy() {
-	rm -f "$LEGACY_BINARY" "$DATA_HOME/atlas-schema-desk/LICENSE"
-}
-
 uninstall() {
 	step "Désinstallation"
 	rm -f "$DESKTOP_FILE" "$ICON_FILE"
-	if [[ -L $BIN_DIR/atlas-schema-desk ]]; then rm -f "$BIN_DIR/atlas-schema-desk"; fi
+	if [[ -L $BIN_DIR/sulcata ]]; then rm -f "$BIN_DIR/sulcata"; fi
 	rm -rf "$APP_DIR"
-	remove_legacy
 	refresh_menu
 	info "Application supprimée."
-	info "Conservés : la configuration (${XDG_CONFIG_HOME:-$HOME/.config}/atlas-schema-desk)"
-	info "et les données de la fenêtre, dont l'historique SQL ($DATA_HOME/atlas-schema-desk)."
+	info "Conservés : la configuration (${XDG_CONFIG_HOME:-$HOME/.config}/sulcata)"
+	info "et les données de la fenêtre, dont l'historique SQL ($DATA_HOME/sulcata)."
 }
 
 # ldconfig lives in /sbin, often outside a regular user's PATH; grep reads
@@ -126,7 +119,7 @@ main() {
 	[[ $(uname -s) == Linux ]] || die "ce script est pour Linux. Sous Windows, télécharge l'installeur depuis https://github.com/$REPO/releases/latest"
 	case $(uname -m) in
 	x86_64 | amd64) ;;
-	*) die "l'application de bureau existe pour Linux x86_64 seulement ; sur $(uname -m), utilise le serveur (atlas-schema-desk-server_linux_arm64.tar.gz) depuis https://github.com/$REPO/releases/latest" ;;
+	*) die "l'application de bureau existe pour Linux x86_64 seulement ; sur $(uname -m), utilise le serveur (sulcata-server_linux_arm64.tar.gz) depuis https://github.com/$REPO/releases/latest" ;;
 	esac
 	for argument in curl tar sha256sum; do
 		command -v "$argument" >/dev/null || die "$argument est nécessaire : installe-le puis relance ce script"
@@ -150,26 +143,25 @@ main() {
 	step "Installation"
 	mkdir -p "$work/app"
 	tar -xzf "$work/$ASSET" -C "$work/app" </dev/null
-	[[ -x $work/app/atlas-schema-desk ]] || die "archive incomplète : atlas-schema-desk manquant"
+	[[ -x $work/app/sulcata ]] || die "archive incomplète : sulcata manquant"
 	mkdir -p "$APP_DIR" "$BIN_DIR" "$(dirname "$DESKTOP_FILE")" "$(dirname "$ICON_FILE")"
 	# Replace through a rename: a running copy keeps working until it restarts.
-	install -m 755 "$work/app/atlas-schema-desk" "$APP_DIR/.atlas-schema-desk.new"
-	mv -f "$APP_DIR/.atlas-schema-desk.new" "$APP_DIR/atlas-schema-desk"
+	install -m 755 "$work/app/sulcata" "$APP_DIR/.sulcata.new"
+	mv -f "$APP_DIR/.sulcata.new" "$APP_DIR/sulcata"
 	install -m 644 "$work/app/LICENSE" "$APP_DIR/LICENSE"
 	install -m 644 "$work/app/icon.png" "$ICON_FILE"
-	sed "s|^Exec=.*|Exec=\"$APP_DIR/atlas-schema-desk\"|" "$work/app/atlas-schema-desk.desktop" >"$DESKTOP_FILE"
-	ln -sfn "$APP_DIR/atlas-schema-desk" "$BIN_DIR/atlas-schema-desk"
-	remove_legacy
+	sed "s|^Exec=.*|Exec=\"$APP_DIR/sulcata\"|" "$work/app/sulcata.desktop" >"$DESKTOP_FILE"
+	ln -sfn "$APP_DIR/sulcata" "$BIN_DIR/sulcata"
 	refresh_menu
-	version=$("$APP_DIR/atlas-schema-desk" version </dev/null 2>/dev/null || echo "?")
-	info "Atlas Schema Desk $version installé dans $APP_DIR"
+	version=$("$APP_DIR/sulcata" version </dev/null 2>/dev/null || echo "?")
+	info "Sulcata $version installé dans $APP_DIR"
 
 	step "Terminé"
-	info "Lance « Atlas Schema Desk » depuis le menu des applications,"
-	info "ou tape : atlas-schema-desk"
+	info "Lance « Sulcata » depuis le menu des applications,"
+	info "ou tape : sulcata"
 	case :$PATH: in
 	*":$BIN_DIR:"*) ;;
-	*) info "(ajoute $BIN_DIR à ton PATH pour la commande, ou utilise $APP_DIR/atlas-schema-desk)" ;;
+	*) info "(ajoute $BIN_DIR à ton PATH pour la commande, ou utilise $APP_DIR/sulcata)" ;;
 	esac
 	info "Les mises à jour se proposent ensuite dans l'application."
 }

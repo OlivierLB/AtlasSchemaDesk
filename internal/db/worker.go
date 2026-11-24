@@ -5,7 +5,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/config"
+	"github.com/OlivierLB/Sulcata/internal/config"
 )
 
 // Worker owns one Database per configured source for one browser session.

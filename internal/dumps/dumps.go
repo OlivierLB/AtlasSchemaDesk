@@ -19,9 +19,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/catalog"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/config"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/snapshot"
+	"github.com/OlivierLB/Sulcata/internal/catalog"
+	"github.com/OlivierLB/Sulcata/internal/config"
+	"github.com/OlivierLB/Sulcata/internal/snapshot"
 )
 
 // Version is one available backup.
@@ -215,7 +215,7 @@ func Apply(cfg *config.Config, connection, version string) error {
 	// stays untouched if restoration fails.
 	command := shellCommand(source.RestoreCommand)
 	command.Dir = filepath.Dir(cfg.Path)
-	command.Env = append(os.Environ(), "ATLAS_DUMP_PATH="+temporary, "ATLAS_CONNECTION="+connection)
+	command.Env = append(os.Environ(), "SULCATA_DUMP_PATH="+temporary, "SULCATA_CONNECTION="+connection)
 	command.Stdout, command.Stderr = os.Stdout, os.Stderr
 	if err := command.Run(); err != nil {
 		var exit *exec.ExitError

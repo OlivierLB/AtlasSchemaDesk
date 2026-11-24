@@ -1205,7 +1205,7 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
-                "x-atlas-session": string;
+                "x-sulcata-session": string;
             };
             path?: never;
             cookie?: never;
@@ -1276,7 +1276,7 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
-                "x-atlas-session": string;
+                "x-sulcata-session": string;
             };
             path?: never;
             cookie?: never;
@@ -1690,7 +1690,7 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
-                "x-atlas-session": string;
+                "x-sulcata-session": string;
             };
             path?: never;
             cookie?: never;
@@ -1755,7 +1755,7 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
-                "x-atlas-session": string;
+                "x-sulcata-session": string;
             };
             path?: never;
             cookie?: never;
@@ -1822,7 +1822,7 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
-                "x-atlas-session": string;
+                "x-sulcata-session": string;
             };
             path?: never;
             cookie?: never;
@@ -1889,7 +1889,7 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
-                "x-atlas-session": string;
+                "x-sulcata-session": string;
             };
             path?: never;
             cookie?: never;
@@ -1960,7 +1960,7 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
-                "x-atlas-session": string;
+                "x-sulcata-session": string;
             };
             path?: never;
             cookie?: never;
@@ -2031,7 +2031,7 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
-                "x-atlas-session": string;
+                "x-sulcata-session": string;
             };
             path?: never;
             cookie?: never;
@@ -2102,7 +2102,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                "x-atlas-session"?: string | null;
+                "x-sulcata-session"?: string | null;
             };
             path?: never;
             cookie?: never;

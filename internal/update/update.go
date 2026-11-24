@@ -23,7 +23,7 @@ import (
 )
 
 // Repository hosts the releases.
-const Repository = "OlivierLB/AtlasSchemaDesk"
+const Repository = "OlivierLB/Sulcata"
 
 // checkEvery limits calls to the GitHub API (60 per hour without a token).
 const checkEvery = 6 * time.Hour
@@ -77,9 +77,9 @@ func New(current, asset string) *Updater {
 func AssetName(goos, goarch string) string {
 	switch goos {
 	case "linux":
-		return "atlas-schema-desk_linux_" + goarch + ".tar.gz"
+		return "sulcata_linux_" + goarch + ".tar.gz"
 	case "windows":
-		return "atlas-schema-desk_windows_" + goarch + "_setup.exe"
+		return "sulcata_windows_" + goarch + "_setup.exe"
 	}
 	return ""
 }
@@ -164,7 +164,7 @@ func (u *Updater) get(ctx context.Context, url string, limit int64) ([]byte, err
 	if err != nil {
 		return nil, err
 	}
-	request.Header.Set("User-Agent", "atlas-schema-desk/"+u.Current)
+	request.Header.Set("User-Agent", "sulcata/"+u.Current)
 	response, err := u.Client.Do(request)
 	if err != nil {
 		return nil, err

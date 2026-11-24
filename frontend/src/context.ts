@@ -19,7 +19,7 @@ export interface SqlState {
   running: boolean;
   uncertain?: boolean;
 }
-export interface AtlasContext {
+export interface SulcataContext {
   config: PublicConfig;
   schema?: Schema;
   programs?: Programs;
@@ -38,9 +38,9 @@ export interface AtlasContext {
   notice: (message: string) => void;
   refreshSession: () => Promise<void>;
 }
-export const Atlas = createContext<AtlasContext | null>(null);
-export function useAtlas() {
-  const context = useContext(Atlas);
-  if (!context) throw new Error("Atlas context is missing");
+export const Sulcata = createContext<SulcataContext | null>(null);
+export function useSulcata() {
+  const context = useContext(Sulcata);
+  if (!context) throw new Error("Sulcata context is missing");
   return context;
 }

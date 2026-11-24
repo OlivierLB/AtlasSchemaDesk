@@ -13,7 +13,7 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/model"
+	"github.com/OlivierLB/Sulcata/internal/model"
 )
 
 // WriteAtomic replaces path with data through a temporary file in the same

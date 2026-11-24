@@ -32,7 +32,7 @@ def main():
     connections[1]["allowWrites"] = True
     tables = [dict(schema="public", name=name, columns=[dict(name="id", type="integer", primary=True, nullable=False), dict(name="name", type="text", nullable=True)], foreignKeys=[]) for name in ["authors", "books"]]
     tables[1]["foreignKeys"] = [dict(column="id", targetSchema="public", targetTable="authors", targetColumn="id")]
-    state = dict(configPath="atlas.example.toml", allowedDbHosts=["127.0.0.1"], connections=connections, dumpSources=[backup], pendingRestart=False)
+    state = dict(configPath="sulcata.example.toml", allowedDbHosts=["127.0.0.1"], connections=connections, dumpSources=[backup], pendingRestart=False)
     writes = []
     failures = []
     runtime = dict(transactions={}, restore="idle", cancelled=False)

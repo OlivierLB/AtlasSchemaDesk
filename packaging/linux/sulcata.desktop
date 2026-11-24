@@ -1,9 +1,9 @@
 [Desktop Entry]
 Type=Application
-Name=Atlas Schema Desk
+Name=Sulcata
 Comment=Explorer les schémas, les données et les routines de vos bases PostgreSQL et MySQL
-Exec=atlas-schema-desk
-Icon=atlas-schema-desk
+Exec=sulcata
+Icon=sulcata
 Terminal=false
 Categories=Development;Database;
-StartupWMClass=atlas-schema-desk
+StartupWMClass=sulcata

@@ -8,13 +8,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/config"
+	"github.com/OlivierLB/Sulcata/internal/config"
 )
 
 func testConfig(t *testing.T) *config.Config {
 	root := t.TempDir()
 	return &config.Config{
-		Path:        filepath.Join(root, "atlas.toml"),
+		Path:        filepath.Join(root, "sulcata.toml"),
 		Connections: []config.Connection{{ID: "library", Driver: "postgresql", Password: "unit-secret"}},
 		DataDir:     filepath.Join(root, "data"),
 	}

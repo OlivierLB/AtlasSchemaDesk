@@ -50,6 +50,6 @@ allow_writes = false
 # path = "./backups"
 # pattern = "*.sql.gz"
 # local_path = ".local/dumps/library.sql.gz"
-# restore_command = 'gzip -dc "$ATLAS_DUMP_PATH" | psql --dbname=pagila'
+# restore_command = 'gzip -dc "$SULCATA_DUMP_PATH" | psql --dbname=pagila'
 
 # S3 variant: type = "s3-versioned", bucket = "my-backups", key = "library.sql.gz".

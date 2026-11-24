@@ -16,8 +16,8 @@ import (
 
 	"github.com/BurntSushi/toml"
 
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/config"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/snapshot"
+	"github.com/OlivierLB/Sulcata/internal/config"
+	"github.com/OlivierLB/Sulcata/internal/snapshot"
 )
 
 // ErrInvalid marks a change rejected by validation (answered with HTTP 400).
@@ -258,7 +258,7 @@ func (s *Store) DeleteDumpSource(connection string) error {
 // and the configuration atomically, keeping the previous files as *.previous.
 func (s *Store) commit(raw map[string]any, passwords map[string]string) error {
 	var buffer bytes.Buffer
-	buffer.WriteString("# Edited by Atlas Schema Desk; the previous version is kept in " + filepath.Base(s.path) + ".previous\n")
+	buffer.WriteString("# Edited by Sulcata; the previous version is kept in " + filepath.Base(s.path) + ".previous\n")
 	if err := toml.NewEncoder(&buffer).Encode(raw); err != nil {
 		return err
 	}

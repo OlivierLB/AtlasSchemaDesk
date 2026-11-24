@@ -14,13 +14,13 @@ let initPromise: Promise<string> | undefined;
 let channel: BroadcastChannel | undefined;
 let releaseOwner: (() => void) | undefined;
 const instance = crypto.randomUUID();
-const storageKey = "atlas-session";
+const storageKey = "sulcata-session";
 
 async function ownSession(id: string): Promise<boolean> {
   if (!navigator.locks) return true;
   return new Promise<boolean>((resolve, reject) => {
     void navigator.locks
-      .request(`atlas-session:${id}`, { ifAvailable: true }, async (lock) => {
+      .request(`sulcata-session:${id}`, { ifAvailable: true }, async (lock) => {
         if (!lock) {
           resolve(false);
           return;
@@ -45,8 +45,8 @@ export async function request<T>(
     headers: {
       ...(body === undefined
         ? {}
-        : { "Content-Type": "application/json", "X-DB-Atlas": "1" }),
-      ...(session && sessionId ? { "X-Atlas-Session": sessionId } : {}),
+        : { "Content-Type": "application/json", "X-Sulcata": "1" }),
+      ...(session && sessionId ? { "X-Sulcata-Session": sessionId } : {}),
     },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
@@ -55,7 +55,7 @@ export async function request<T>(
   if (!response.ok) {
     const failure = payload as { error?: string; code?: string };
     if (failure.code === "session_expired")
-      window.dispatchEvent(new Event("atlas-session-expired"));
+      window.dispatchEvent(new Event("sulcata-session-expired"));
     throw new ApiError(
       failure.error || `HTTP ${response.status}`,
       response.status,
@@ -75,7 +75,7 @@ export function initializeSession(): Promise<string> {
       /* private mode */
     }
     if (typeof BroadcastChannel !== "undefined") {
-      channel = new BroadcastChannel("atlas-session-owners");
+      channel = new BroadcastChannel("sulcata-session-owners");
       let claimed = false;
       channel.onmessage = ({
         data,

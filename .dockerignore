@@ -3,7 +3,7 @@
 .local
 .env
 .env.*
-atlas.toml
+sulcata.toml
 *.local.toml
 *.toml.previous
 .*.candidate-*

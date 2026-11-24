@@ -10,7 +10,7 @@ import (
 	"time"
 	_ "time/tzdata"
 
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/model"
+	"github.com/OlivierLB/Sulcata/internal/model"
 )
 
 type Match struct {

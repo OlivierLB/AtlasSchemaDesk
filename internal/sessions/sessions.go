@@ -10,8 +10,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/config"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/db"
+	"github.com/OlivierLB/Sulcata/internal/config"
+	"github.com/OlivierLB/Sulcata/internal/db"
 )
 
 // ErrExpired means the session is unknown or idle for too long.

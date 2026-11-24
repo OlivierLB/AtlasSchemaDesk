@@ -8,7 +8,7 @@ afterEach(() => {
 describe("browser session ownership", () => {
   it("does not reuse a possibly cloned session when browser ownership locks are unavailable", async () => {
     const memory = new Map([
-      ["atlas-session", "possibly-owned-by-another-tab"],
+      ["sulcata-session", "possibly-owned-by-another-tab"],
     ]);
     vi.stubGlobal("sessionStorage", {
       getItem: (key: string) => memory.get(key),
@@ -38,6 +38,6 @@ describe("browser session ownership", () => {
     expect(await initializeSession()).toBe("fresh-isolated-session");
     expect(fetch).toHaveBeenCalledOnce();
     expect(fetch.mock.calls[0][0]).toBe("/api/sessions");
-    expect(memory.get("atlas-session")).toBe("fresh-isolated-session");
+    expect(memory.get("sulcata-session")).toBe("fresh-isolated-session");
   });
 });

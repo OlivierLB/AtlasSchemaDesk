@@ -16,12 +16,12 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/analysis"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/config"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/db"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/model"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/pyre"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/snapshot"
+	"github.com/OlivierLB/Sulcata/internal/analysis"
+	"github.com/OlivierLB/Sulcata/internal/config"
+	"github.com/OlivierLB/Sulcata/internal/db"
+	"github.com/OlivierLB/Sulcata/internal/model"
+	"github.com/OlivierLB/Sulcata/internal/pyre"
+	"github.com/OlivierLB/Sulcata/internal/snapshot"
 )
 
 // Now returns the export timestamp format ("2026-11-20T15:40:35+00:00").

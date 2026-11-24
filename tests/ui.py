@@ -10,14 +10,14 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
-BASE = os.environ.get('ATLAS_TEST_BASE', 'http://127.0.0.1:18765')
+BASE = os.environ.get('SULCATA_TEST_BASE', 'http://127.0.0.1:18765')
 SESSION = ''
 
 
 def request(path, body=None, headers=None):
-    defaults = {'X-Atlas-Session': SESSION} if SESSION else {}
+    defaults = {'X-Sulcata-Session': SESSION} if SESSION else {}
     if body is not None:
-        defaults |= {'Content-Type': 'application/json', 'X-DB-Atlas': '1'}
+        defaults |= {'Content-Type': 'application/json', 'X-Sulcata': '1'}
     req = urllib.request.Request(BASE + path, data=json.dumps(body).encode() if body is not None else None,
                                  headers=headers if headers is not None else defaults)
     try:
@@ -35,7 +35,7 @@ def request(path, body=None, headers=None):
 def browser_sql(page, sql):
     return page.evaluate('''async sql => {
       const response = await fetch('/api/sql', {method:'POST', headers:{'Content-Type':'application/json',
-        'X-DB-Atlas':'1','X-Atlas-Session':sessionStorage.getItem('atlas-session')},
+        'X-Sulcata':'1','X-Sulcata-Session':sessionStorage.getItem('sulcata-session')},
         body:JSON.stringify({engine:'library-write',sql})});
       return {status:response.status, body:await response.json()};
     }''', sql)
@@ -44,7 +44,7 @@ def browser_sql(page, sql):
 def browser_end(page, action):
     return page.evaluate('''async action => {
       const response = await fetch('/api/sql/'+action, {method:'POST', headers:{'Content-Type':'application/json',
-        'X-DB-Atlas':'1','X-Atlas-Session':sessionStorage.getItem('atlas-session')},
+        'X-Sulcata':'1','X-Sulcata-Session':sessionStorage.getItem('sulcata-session')},
         body:JSON.stringify({engine:'library-write'})});
       return {status:response.status,body:await response.json()};
     }''', action)
@@ -78,8 +78,8 @@ def connections_page(context, process):
     form.get_by_label('Libellé').fill('Extra sample')
     form.get_by_label('Port', exact=True).fill('55432')
     form.get_by_label('Base', exact=True).fill('pagila')
-    form.get_by_label('Utilisateur').fill('atlas_test')
-    assert form.get_by_label('Variable du mot de passe').input_value() == 'ATLAS_EXTRA_PASSWORD'
+    form.get_by_label('Utilisateur').fill('sulcata_test')
+    assert form.get_by_label('Variable du mot de passe').input_value() == 'SULCATA_EXTRA_PASSWORD'
     form.get_by_label('Mot de passe', exact=True).fill('public-test-only')
     form.get_by_role('button', name='Enregistrer').click()
     page.wait_for_selector('#connection-extra')
@@ -117,7 +117,7 @@ def main():
     dest = ROOT / '.local/test-results'
     dest.mkdir(parents=True, exist_ok=True)
     with (dest / 'server.log').open('w') as log:
-        binary = os.environ.get('ATLAS_BINARY', str(ROOT / 'bin/atlas-schema-desk'))
+        binary = os.environ.get('SULCATA_BINARY', str(ROOT / 'bin/sulcata'))
         process = subprocess.Popen([binary, '--config', str(ROOT / '.local/test.toml')],
                                    cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
         try:
@@ -145,7 +145,7 @@ def main():
             assert request('/api/s3/refresh', {})[0] == 404
             assert request('/api/data/rows', dict(engine='library', schema='public', table='actor', filters={'unknown': '1'}))[0] == 400
             assert request('/api/sql', dict(engine='library', sql='SELECT 1'))[0] == 200
-            assert request('/api/sql', dict(engine='library-write', sql='DELETE FROM atlas_probe'))[1]['needsConfirmation']
+            assert request('/api/sql', dict(engine='library-write', sql='DELETE FROM sulcata_probe'))[1]['needsConfirmation']
             with sync_playwright() as p:
                 browser = p.firefox.launch(headless=True)
                 context = browser.new_context(viewport=dict(width=1440, height=1000))
@@ -173,25 +173,25 @@ def main():
                 assert page.locator('.data-error').count() == 0
                 page.screenshot(path=str(dest / 'sql.png'), full_page=True)
                 # A reload retains the session, but a cloned tab must not share it.
-                original = page.evaluate('sessionStorage.getItem("atlas-session")')
+                original = page.evaluate('sessionStorage.getItem("sulcata-session")')
                 page.reload()
                 page.wait_for_selector('.CodeMirror')
-                assert page.evaluate('sessionStorage.getItem("atlas-session")') == original
+                assert page.evaluate('sessionStorage.getItem("sulcata-session")') == original
                 second = context.new_page()
-                second.add_init_script(f'sessionStorage.setItem("atlas-session", {json.dumps(original)})')
+                second.add_init_script(f'sessionStorage.setItem("sulcata-session", {json.dumps(original)})')
                 second.goto(BASE + '/#/sql/library-write')
                 second.wait_for_selector('.CodeMirror')
-                assert second.evaluate('sessionStorage.getItem("atlas-session")') != original
+                assert second.evaluate('sessionStorage.getItem("sulcata-session")') != original
                 # Two real database sessions see only their own uncommitted state.
-                result = browser_sql(page, "UPDATE atlas_probe SET value='tab-one' WHERE id=1")
+                result = browser_sql(page, "UPDATE sulcata_probe SET value='tab-one' WHERE id=1")
                 assert result['status'] == 200 and result['body']['txOpen'], result
-                assert browser_sql(page, 'SELECT value FROM atlas_probe WHERE id=1')['body']['results'][0]['rows'][0][0] == 'tab-one'
-                assert browser_sql(second, 'SELECT value FROM atlas_probe WHERE id=1')['body']['results'][0]['rows'][0][0] == 'original'
+                assert browser_sql(page, 'SELECT value FROM sulcata_probe WHERE id=1')['body']['results'][0]['rows'][0][0] == 'tab-one'
+                assert browser_sql(second, 'SELECT value FROM sulcata_probe WHERE id=1')['body']['results'][0]['rows'][0][0] == 'original'
                 assert browser_end(second, 'commit')['body']['done'] is False
-                assert browser_sql(page, 'SELECT value FROM atlas_probe WHERE id=1')['body']['results'][0]['rows'][0][0] == 'tab-one'
+                assert browser_sql(page, 'SELECT value FROM sulcata_probe WHERE id=1')['body']['results'][0]['rows'][0][0] == 'tab-one'
                 assert browser_end(page, 'rollback')['body']['done'] is True
                 second.close()
-                page.goto(BASE + '/#/library-write/public/atlas_probe/donnees')
+                page.goto(BASE + '/#/library-write/public/sulcata_probe/donnees')
                 page.wait_for_selector('td[title="Double-clic : modifier"]')
                 page.locator('td[title="Double-clic : modifier"]').filter(has_text='original').dblclick()
                 page.locator('#cell-input').fill('edited-in-grid')
@@ -227,11 +227,11 @@ def main():
                 assert renewal['done']
                 warning.route('**/api/status', lambda route: route.fulfill(status=409, json=dict(error='Session expired', code='session_expired')))
                 warning.get_by_role('button', name='Nouvelle session').wait_for()
-                previous_session = warning.evaluate('sessionStorage.getItem("atlas-session")')
+                previous_session = warning.evaluate('sessionStorage.getItem("sulcata-session")')
                 warning.unroute('**/api/status')
                 warning.get_by_role('button', name='Nouvelle session').click()
                 warning.get_by_role('button', name='Nouvelle session').wait_for(state='detached')
-                assert warning.evaluate('sessionStorage.getItem("atlas-session")') != previous_session
+                assert warning.evaluate('sessionStorage.getItem("sulcata-session")') != previous_session
                 warning.locator('#versions-toggle').click()
                 warning.get_by_role('button', name='Opérations', exact=True).click()
                 warning.get_by_role('button', name='Annuler les transactions et fermer la session').click()

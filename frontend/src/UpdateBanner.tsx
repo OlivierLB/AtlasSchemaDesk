@@ -4,7 +4,7 @@ import { request } from "./api";
 import { errorText, stored } from "./model";
 import type { UpdateStatus } from "./model";
 
-const dismissedKey = "atlas-update-dismissed";
+const dismissedKey = "sulcata-update-dismissed";
 
 async function waitForNewVersion(latest: string) {
   // Linux restarts in place; on Windows the installer closes this window and

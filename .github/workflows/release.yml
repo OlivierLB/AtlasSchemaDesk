@@ -56,24 +56,24 @@ jobs:
             return $false
           }
 
-          Start-Process dist\atlas-schema-desk_windows_amd64_setup.exe -ArgumentList '/S' -Wait
-          $app = Join-Path $env:LOCALAPPDATA 'Programs\Atlas Schema Desk\atlas-schema-desk.exe'
+          Start-Process dist\sulcata_windows_amd64_setup.exe -ArgumentList '/S' -Wait
+          $app = Join-Path $env:LOCALAPPDATA 'Programs\Sulcata\sulcata.exe'
           if (-not (Test-Path $app)) { throw "Not installed: $app" }
-          if (-not (Test-Path (Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Atlas Schema Desk.lnk'))) { throw 'Start menu shortcut missing' }
+          if (-not (Test-Path (Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Sulcata.lnk'))) { throw 'Start menu shortcut missing' }
           Start-Process $app -ArgumentList 'version' -RedirectStandardOutput version.txt -Wait -NoNewWindow
           $version = (Get-Content version.txt -Raw).Trim()
           if ($version -ne $expected) { throw "Unexpected version: $version" }
 
           # Fake release v99.0.0 carrying this installer, served locally.
           $fake = New-Item -ItemType Directory fake -Force
-          New-Item -ItemType Directory "$fake\repos\OlivierLB\AtlasSchemaDesk\releases" -Force | Out-Null
-          Copy-Item dist\atlas-schema-desk_windows_amd64_setup.exe, dist\SHA256SUMS $fake
+          New-Item -ItemType Directory "$fake\repos\OlivierLB\Sulcata\releases" -Force | Out-Null
+          Copy-Item dist\sulcata_windows_amd64_setup.exe, dist\SHA256SUMS $fake
           $base = 'http://127.0.0.1:9900'
-          Set-Content "$fake\repos\OlivierLB\AtlasSchemaDesk\releases\latest" ('{"tag_name":"v99.0.0","html_url":"' + $base + '/","assets":[' +
-            '{"name":"atlas-schema-desk_windows_amd64_setup.exe","browser_download_url":"' + $base + '/atlas-schema-desk_windows_amd64_setup.exe"},' +
+          Set-Content "$fake\repos\OlivierLB\Sulcata\releases\latest" ('{"tag_name":"v99.0.0","html_url":"' + $base + '/","assets":[' +
+            '{"name":"sulcata_windows_amd64_setup.exe","browser_download_url":"' + $base + '/sulcata_windows_amd64_setup.exe"},' +
             '{"name":"SHA256SUMS","browser_download_url":"' + $base + '/SHA256SUMS"}]}')
           $web = Start-Process python -ArgumentList '-m','http.server','9900','--bind','127.0.0.1','--directory',$fake -PassThru -WindowStyle Hidden
-          $env:ATLAS_UPDATE_API = $base
+          $env:SULCATA_UPDATE_API = $base
 
           # The desktop window (WebView2), not the headless server.
           $window = Start-Process $app -PassThru
@@ -83,12 +83,12 @@ jobs:
 
           $status = Invoke-RestMethod http://localhost:8765/api/update
           if (-not $status.canInstall -or $status.latest -ne '99.0.0') { throw "Update not offered: $($status | ConvertTo-Json -Compress)" }
-          Invoke-RestMethod -Method Post http://localhost:8765/api/update/install -Headers @{ 'X-DB-Atlas' = '1' } -ContentType 'application/json' -Body '{}' | Out-Null
+          Invoke-RestMethod -Method Post http://localhost:8765/api/update/install -Headers @{ 'X-Sulcata' = '1' } -ContentType 'application/json' -Body '{}' | Out-Null
           if (-not $window.WaitForExit(30000)) { throw 'The app did not close for the update' }
           if (-not (Wait-Answer 8765 90)) { throw 'The app was not relaunched after the silent update' }
           Write-Output 'In-app update: downloaded, verified, installed silently, relaunched'
 
-          Get-Process atlas-schema-desk -ErrorAction SilentlyContinue | Stop-Process -Force
+          Get-Process sulcata -ErrorAction SilentlyContinue | Stop-Process -Force
           Stop-Process -Id $web.Id -Force
           Start-Sleep -Seconds 2
           Start-Process (Join-Path (Split-Path $app) 'uninstall.exe') -ArgumentList '/S' -Wait
@@ -109,4 +109,4 @@ jobs:
       - name: GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" --title "Atlas Schema Desk ${GITHUB_REF_NAME#v}" --generate-notes
+        run: gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" --title "Sulcata ${GITHUB_REF_NAME#v}" --generate-notes

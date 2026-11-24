@@ -98,9 +98,9 @@ func digestOf(data []byte) string {
 }
 
 func TestCheckAndDownload(t *testing.T) {
-	data := archive(t, "atlas-schema-desk", []byte("new binary"))
-	server := fakeGitHub(t, "v0.4.0", "atlas-schema-desk_linux_amd64.tar.gz", data, digestOf(data))
-	u := New("0.3.0", "atlas-schema-desk_linux_amd64.tar.gz")
+	data := archive(t, "sulcata", []byte("new binary"))
+	server := fakeGitHub(t, "v0.4.0", "sulcata_linux_amd64.tar.gz", data, digestOf(data))
+	u := New("0.3.0", "sulcata_linux_amd64.tar.gz")
 	u.API = server.URL
 	status := u.Check(context.Background())
 	if !status.Available || !status.CanInstall || status.Latest != "0.4.0" || status.Page == "" {
@@ -121,8 +121,8 @@ func TestCheckAndDownload(t *testing.T) {
 
 func TestDownloadRejectsTamperedAsset(t *testing.T) {
 	data := []byte("setup program")
-	server := fakeGitHub(t, "v0.4.0", "atlas-schema-desk_windows_amd64_setup.exe", data, strings.Repeat("0", 64))
-	u := New("0.3.0", "atlas-schema-desk_windows_amd64_setup.exe")
+	server := fakeGitHub(t, "v0.4.0", "sulcata_windows_amd64_setup.exe", data, strings.Repeat("0", 64))
+	u := New("0.3.0", "sulcata_windows_amd64_setup.exe")
 	u.API = server.URL
 	if _, err := u.Download(context.Background()); err == nil || !strings.Contains(err.Error(), "SHA-256") {
 		t.Fatalf("tampered asset accepted: %v", err)
@@ -141,12 +141,12 @@ func TestInstallReplacesExecutable(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("Windows runs the setup program instead")
 	}
-	executable := filepath.Join(t.TempDir(), "atlas-schema-desk")
+	executable := filepath.Join(t.TempDir(), "sulcata")
 	os.WriteFile(executable, []byte("old"), 0o755)
 	if !Writable(executable) {
 		t.Fatal("temporary directory reported read-only")
 	}
-	restart, err := Install(archive(t, "atlas-schema-desk", []byte("new")), executable)
+	restart, err := Install(archive(t, "sulcata", []byte("new")), executable)
 	if err != nil || !restart {
 		t.Fatalf("Install = %v, %v", restart, err)
 	}

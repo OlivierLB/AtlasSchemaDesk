@@ -1,5 +1,5 @@
 # Local configuration, credentials, databases and generated exports are never tracked.
-atlas.toml
+sulcata.toml
 *.local.toml
 *.toml.previous
 .*.candidate-*
@@ -35,4 +35,4 @@ test-results/
 node_modules/
 web/dist/app/
 *.tsbuildinfo
-cmd/atlas-schema-desk/rsrc_*.syso
+cmd/sulcata/rsrc_*.syso

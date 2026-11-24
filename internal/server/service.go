@@ -12,11 +12,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/config"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/db"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/model"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/pyre"
-	"github.com/OlivierLB/AtlasSchemaDesk/internal/sqlconsole"
+	"github.com/OlivierLB/Sulcata/internal/config"
+	"github.com/OlivierLB/Sulcata/internal/db"
+	"github.com/OlivierLB/Sulcata/internal/model"
+	"github.com/OlivierLB/Sulcata/internal/pyre"
+	"github.com/OlivierLB/Sulcata/internal/sqlconsole"
 )
 
 const (
@@ -365,7 +365,7 @@ func (s *service) sql(request sqlRequest) (any, error) {
 	if outcome.TxOpen {
 		state = "ouverte"
 	}
-	log.Printf("[DB Atlas] SQL %s : %d instruction(s) (%s), transaction %s", request.Engine, len(statements), strings.Join(kinds, ", "), state)
+	log.Printf("[DB Sulcata] SQL %s : %d instruction(s) (%s), transaction %s", request.Engine, len(statements), strings.Join(kinds, ", "), state)
 	return sqlResponse{Confirmations: []confirmation{}, Results: outcome.Results, Error: outcome.Error, TxOpen: outcome.TxOpen, ImplicitCommit: outcome.ImplicitCommit, Statements: previews}, nil
 }
 
@@ -385,7 +385,7 @@ func (s *service) end(request engineRequest, action string) (any, error) {
 	if !done {
 		suffix = " (aucune transaction ouverte)"
 	}
-	log.Printf("[DB Atlas] SQL %s : transaction %s%s", request.Engine, verb, suffix)
+	log.Printf("[DB Sulcata] SQL %s : transaction %s%s", request.Engine, verb, suffix)
 	return map[string]bool{"txOpen": false, "done": done}, nil
 }
 

@@ -23,14 +23,14 @@ def docker(*args, check=True):
 def main():
     suffix = uuid.uuid4().hex[:10]
     network, database, application = (
-        f"atlas-smoke-{suffix}-{kind}" for kind in ("net", "pg", "app")
+        f"sulcata-smoke-{suffix}-{kind}" for kind in ("net", "pg", "app")
     )
     base = "http://127.0.0.1:18766"
-    with tempfile.TemporaryDirectory(prefix="atlas-image-") as temporary:
+    with tempfile.TemporaryDirectory(prefix="sulcata-image-") as temporary:
         root = Path(temporary)
         data = root / "local"
         data.mkdir()
-        config = root / "atlas.toml"
+        config = root / "sulcata.toml"
         config.write_text("""[server]
 port = 18766
 allowed_db_hosts = ["db"]
@@ -42,7 +42,7 @@ host = "db"
 port = 5432
 database = "sample"
 user = "postgres"
-password_env = "ATLAS_SMOKE_PASSWORD"
+password_env = "SULCATA_SMOKE_PASSWORD"
 """)
         try:
             docker("network", "create", network)
@@ -94,7 +94,7 @@ password_env = "ATLAS_SMOKE_PASSWORD"
                 "-v",
                 "ON_ERROR_STOP=1",
                 "-c",
-                "CREATE TABLE atlas_smoke_probe (id integer PRIMARY KEY, value text); INSERT INTO atlas_smoke_probe VALUES (1,'docker-ok');",
+                "CREATE TABLE sulcata_smoke_probe (id integer PRIMARY KEY, value text); INSERT INTO sulcata_smoke_probe VALUES (1,'docker-ok');",
             )
             docker(
                 "run",
@@ -111,12 +111,12 @@ password_env = "ATLAS_SMOKE_PASSWORD"
                 "-p",
                 "127.0.0.1:18766:18766",
                 "-v",
-                f"{config}:/workspace/atlas.toml:ro",
+                f"{config}:/workspace/sulcata.toml:ro",
                 "-v",
                 f"{data}:/workspace/.local",
                 "-e",
-                "ATLAS_SMOKE_PASSWORD=public-test-only",
-                "atlas-schema-desk:test",
+                "SULCATA_SMOKE_PASSWORD=public-test-only",
+                "sulcata:test",
                 "--port",
                 "18766",
             )
@@ -147,7 +147,7 @@ password_env = "ATLAS_SMOKE_PASSWORD"
                 page = browser.new_page()
                 errors = []
                 page.on("pageerror", lambda error: errors.append(str(error)))
-                page.goto(base + "/#/sample/public/atlas_smoke_probe/donnees")
+                page.goto(base + "/#/sample/public/sulcata_smoke_probe/donnees")
                 page.wait_for_selector('td:text-is("docker-ok")')
                 assert not errors, errors
                 browser.close()

@@ -1,7 +1,7 @@
 """Check that the release binary is self-contained: interface embedded, no
 checkout, Node or Python needed at runtime.
 
-Usage: python3 scripts/check_distribution.py [bin/atlas-schema-desk]
+Usage: python3 scripts/check_distribution.py [bin/sulcata]
 Rerunnable; starts the binary on a free localhost port with a synthetic
 configuration (no database is contacted by these checks).
 """
@@ -20,22 +20,22 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def call(base, path, body=None, session=None):
-    headers = {"X-Atlas-Session": session} if session else {}
+    headers = {"X-Sulcata-Session": session} if session else {}
     if body is not None:
-        headers |= {"Content-Type": "application/json", "X-DB-Atlas": "1"}
+        headers |= {"Content-Type": "application/json", "X-Sulcata": "1"}
     request = urllib.request.Request(base + path, data=json.dumps(body).encode() if body is not None else None, headers=headers)
     with urllib.request.urlopen(request, timeout=5) as response:
         return response.status, response.read()
 
 
 def main():
-    binary = Path(sys.argv[1] if len(sys.argv) > 1 else ROOT / "bin/atlas-schema-desk").resolve()
+    binary = Path(sys.argv[1] if len(sys.argv) > 1 else ROOT / "bin/sulcata").resolve()
     with socket.socket() as sock:
         sock.bind(("127.0.0.1", 0))
         port = sock.getsockname()[1]
-    with tempfile.TemporaryDirectory(prefix="atlas-dist-") as temporary:
+    with tempfile.TemporaryDirectory(prefix="sulcata-dist-") as temporary:
         root = Path(temporary)
-        (root / "atlas.toml").write_text(f"""[server]
+        (root / "sulcata.toml").write_text(f"""[server]
 port = {port}
 [[connections]]
 id = "sample"
@@ -44,10 +44,10 @@ host = "127.0.0.1"
 port = 9
 database = "sample"
 user = "reader"
-password_env = "ATLAS_FIXTURE_PASSWORD"
+password_env = "SULCATA_FIXTURE_PASSWORD"
 """)
-        env = {"ATLAS_FIXTURE_PASSWORD": "fixture-only", "PATH": ""}
-        process = subprocess.Popen([str(binary), "--config", "atlas.toml"], cwd=root, env=env,
+        env = {"SULCATA_FIXTURE_PASSWORD": "fixture-only", "PATH": ""}
+        process = subprocess.Popen([str(binary), "--config", "sulcata.toml"], cwd=root, env=env,
                                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         base = f"http://127.0.0.1:{port}"
         try:

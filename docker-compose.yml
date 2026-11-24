@@ -1,11 +1,11 @@
 services:
-  atlas:
+  sulcata:
     build: .
-    user: "${ATLAS_UID:-1000}:${ATLAS_GID:-1000}"
+    user: "${SULCATA_UID:-1000}:${SULCATA_GID:-1000}"
     ports: ["127.0.0.1:8765:8765"]
     env_file: .env
     volumes:
-      - ./atlas.toml:/workspace/atlas.toml:ro
+      - ./sulcata.toml:/workspace/sulcata.toml:ro
       - ./.local:/workspace/.local
     extra_hosts:
       - "host.docker.internal:host-gateway"

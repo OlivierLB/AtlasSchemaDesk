@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useReducer, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { initializeSession, replaceSession, request } from "./api";
-import { Atlas } from "./context";
+import { Sulcata } from "./context";
 import type { SqlState } from "./context";
 import {
   errorText,
@@ -86,11 +86,11 @@ export function App() {
     };
     const expiration = () => setExpired(true);
     addEventListener("hashchange", change);
-    addEventListener("atlas-session-expired", expiration);
+    addEventListener("sulcata-session-expired", expiration);
     return () => {
       mounted = false;
       removeEventListener("hashchange", change);
-      removeEventListener("atlas-session-expired", expiration);
+      removeEventListener("sulcata-session-expired", expiration);
     };
   }, []);
   const config = useQuery({
@@ -269,11 +269,11 @@ export function App() {
   useEffect(() => {
     if (route.view !== "table") return;
     const recent = stored<{ engine: string; schema: string; table: string }[]>(
-      "db-atlas-recent-tables",
+      "sulcata-recent-tables",
       [],
     );
     save(
-      "db-atlas-recent-tables",
+      "sulcata-recent-tables",
       [
         route,
         ...recent.filter(
@@ -298,7 +298,7 @@ export function App() {
     status.data?.transactions || {},
   ).filter((engine) => status.data?.transactions[engine]);
   return (
-    <Atlas.Provider
+    <Sulcata.Provider
       value={{
         config: publicConfig,
         schema: schema.data,
@@ -353,7 +353,7 @@ export function App() {
           <a className="brand" href="#/">
             <span className="brand-mark" aria-hidden="true" />
             <div>
-              <h1 className="brand-name">Atlas Schema Desk</h1>
+              <h1 className="brand-name">Sulcata</h1>
               <p className="brand-subtitle">Votre espace de données</p>
             </div>
           </a>
@@ -689,6 +689,6 @@ export function App() {
           </div>
         </div>
       )}
-    </Atlas.Provider>
+    </Sulcata.Provider>
   );
 }

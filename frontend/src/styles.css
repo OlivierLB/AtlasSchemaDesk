@@ -102,7 +102,7 @@ select:focus-visible {
   height: 34px;
   flex: none;
   border-radius: 9px;
-  background: #2a142f url("./logo.png") center / cover no-repeat;
+  background: url("./logo.svg") center / contain no-repeat;
 }
 .brand-name {
   margin: 0;
@@ -3057,7 +3057,7 @@ a.hood-card:hover {
   flex: 0 0 auto;
 }
 
-/* ---- SQL editor (CodeMirror 5, theme « atlas ») ---- */
+/* ---- SQL editor (CodeMirror 5, theme « sulcata ») ---- */
 .sql-console .CodeMirror {
   height: auto;
   min-height: 180px;
@@ -3075,65 +3075,65 @@ a.hood-card:hover {
 .sql-console .CodeMirror-focused {
   border-color: var(--blue);
 }
-.cm-s-atlas.CodeMirror {
+.cm-s-sulcata.CodeMirror {
   background: var(--panel);
   color: var(--text);
 }
-.cm-s-atlas .CodeMirror-gutters {
+.cm-s-sulcata .CodeMirror-gutters {
   border-right: 1px solid var(--line-soft);
   background: var(--panel);
 }
-.cm-s-atlas .CodeMirror-linenumber {
+.cm-s-sulcata .CodeMirror-linenumber {
   color: #5d6b7e;
 }
-.cm-s-atlas .CodeMirror-cursor {
+.cm-s-sulcata .CodeMirror-cursor {
   border-left: 2px solid var(--blue);
 }
-.cm-s-atlas .CodeMirror-activeline-background {
+.cm-s-sulcata .CodeMirror-activeline-background {
   background: #1d2736;
 }
-.cm-s-atlas .CodeMirror-selected,
-.cm-s-atlas.CodeMirror-focused .CodeMirror-selected {
+.cm-s-sulcata .CodeMirror-selected,
+.cm-s-sulcata.CodeMirror-focused .CodeMirror-selected {
   background: #2c3e58;
 }
-.cm-s-atlas .CodeMirror-matchingbracket {
+.cm-s-sulcata .CodeMirror-matchingbracket {
   color: var(--green) !important;
   outline: 1px solid #83d6b066;
 }
-.cm-s-atlas .cm-keyword {
+.cm-s-sulcata .cm-keyword {
   color: var(--blue);
   font-weight: 600;
 }
-.cm-s-atlas .cm-builtin {
+.cm-s-sulcata .cm-builtin {
   color: var(--accent-secondary);
 }
-.cm-s-atlas .cm-atom {
+.cm-s-sulcata .cm-atom {
   color: #ff9eaa;
 }
-.cm-s-atlas .cm-number {
+.cm-s-sulcata .cm-number {
   color: var(--amber);
 }
-.cm-s-atlas .cm-string,
-.cm-s-atlas .cm-string-2 {
+.cm-s-sulcata .cm-string,
+.cm-s-sulcata .cm-string-2 {
   color: var(--green);
 }
-.cm-s-atlas .cm-comment {
+.cm-s-sulcata .cm-comment {
   color: #6f7f93;
   font-style: italic;
 }
-.cm-s-atlas .cm-variable-2,
-.cm-s-atlas .cm-variable-3 {
+.cm-s-sulcata .cm-variable-2,
+.cm-s-sulcata .cm-variable-3 {
   color: #ffc978;
 }
-.cm-s-atlas .cm-operator,
-.cm-s-atlas .cm-bracket,
-.cm-s-atlas .cm-punctuation {
+.cm-s-sulcata .cm-operator,
+.cm-s-sulcata .cm-bracket,
+.cm-s-sulcata .cm-punctuation {
   color: var(--muted);
 }
-.cm-s-atlas .cm-type {
+.cm-s-sulcata .cm-type {
   color: var(--mysql);
 }
-.cm-s-atlas .cm-sql-error {
+.cm-s-sulcata .cm-sql-error {
   background: #ff9eaa38;
   text-decoration: underline wavy var(--danger);
   text-decoration-thickness: 1px;

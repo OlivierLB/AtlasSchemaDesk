@@ -15,7 +15,7 @@ import (
 
 // starterConfig is written on first launch when no configuration exists, so
 // the application starts empty and databases are added from the interface.
-const starterConfig = `# Atlas Schema Desk configuration. Databases are added from the
+const starterConfig = `# Sulcata configuration. Databases are added from the
 # "Connexions" screen; passwords are stored in the .env file next to it.
 [server]
 bind = "127.0.0.1"
@@ -26,19 +26,19 @@ data_dir = "data"
 
 // restartedEnv marks a process started by an in-app restart: the browser tab
 // is already open, so --open must not open a second one.
-const restartedEnv = "ATLAS_RESTARTED"
+const restartedEnv = "SULCATA_RESTARTED"
 
-// defaultConfigPath keeps ./atlas.toml for existing setups and otherwise uses
+// defaultConfigPath keeps ./sulcata.toml for existing setups and otherwise uses
 // the per-user configuration directory, so a double-click works from anywhere.
 func defaultConfigPath() string {
-	if _, err := os.Stat("atlas.toml"); err == nil {
-		return "atlas.toml"
+	if _, err := os.Stat("sulcata.toml"); err == nil {
+		return "sulcata.toml"
 	}
 	dir, err := os.UserConfigDir()
 	if err != nil {
-		return "atlas.toml"
+		return "sulcata.toml"
 	}
-	return filepath.Join(dir, "atlas-schema-desk", "atlas.toml")
+	return filepath.Join(dir, "sulcata", "sulcata.toml")
 }
 
 // ensureConfig creates the starter configuration when path does not exist.
@@ -74,7 +74,7 @@ func openBrowser(url string, stderr io.Writer) {
 	go func() { _ = command.Wait() }()
 }
 
-// runningInstance reports whether an Atlas Schema Desk server already answers
+// runningInstance reports whether a Sulcata server already answers
 // on url, so a second launch only opens the browser instead of failing.
 func runningInstance(url string) bool {
 	client := http.Client{Timeout: 2 * time.Second}
