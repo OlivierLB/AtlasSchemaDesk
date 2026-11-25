@@ -270,6 +270,10 @@ Avec `[server].refresh_dumps_on_start = false`, le cache local des sauvegardes e
 
 **La restauration remplace le contenu de la base.** `restore_command` est une commande shell de confiance issue de votre configuration locale, exécutée avec vos droits utilisateur. Le chemin du fichier téléchargé est transmis dans `SULCATA_DUMP_PATH` et l’identifiant de connexion dans `SULCATA_CONNECTION`. La commande doit lire ce fichier et renvoyer un code non nul en cas d’échec. Aucune commande fournie par une requête n’est jamais exécutée.
 
+Le suivi de restauration affiche les étapes, le temps écoulé, les octets transférés et le journal en direct. Le pourcentage ne concerne que le transfert mesurable ; l’exécution de la commande et l’actualisation du catalogue restent indiquées comme étapes en cours. Les scripts Python sont exécutés avec `PYTHONUNBUFFERED=1`.
+
+La restauration ne lance pas toute l’application en administrateur. Sous Linux et macOS, les appels à `sudo` dans la commande de confiance utilisent un helper askpass natif : Zenity ou KDialog sous Linux, une boîte de dialogue macOS sur Mac. Le mot de passe est transmis uniquement à sudo, sans passer par le navigateur ni les journaux. Une annulation refuse l’opération privilégiée ; en mode sans bureau, l’absence de dialogue est signalée explicitement.
+
 Sous Linux et macOS, la commande passe par `/bin/sh`. Sous Windows, elle passe par `cmd.exe` : les variables s’écrivent `%SULCATA_DUMP_PATH%`, par exemple `restore_command = 'psql --dbname=pagila --file="%SULCATA_DUMP_PATH%"'` pour un dump non compressé ; Windows n’a pas `gzip` par défaut.
 
 Avant restauration, l’espace disque libre et la taille sont vérifiés ; le dump local précédent est conservé jusqu’à la réussite ; une transaction ouverte ou une requête active bloque la restauration. Une commande échouée ou annulée peut néanmoins laisser une base partiellement restaurée : ce n’est ni un système de sauvegarde ni une restauration atomique. L’annulation arrête tout l’arbre de processus : par groupe de processus sous Linux, macOS et dans l’image Docker, et via `taskkill /T` sous Windows.

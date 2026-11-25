@@ -227,7 +227,10 @@ export function SqlConsole({
                 <Icon name="sql" />
                 Requête SQL
               </h2>
-              <span>{text.split("\n").length} lignes</span>
+              <span>
+                {text.split("\n").length}{" "}
+                {text.includes("\n") ? "lignes" : "ligne"}
+              </span>
             </div>
             <Editor
               value={text}

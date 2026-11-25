@@ -226,8 +226,8 @@ function SchemaList({ engine, schema }: { engine: string; schema: string }) {
         </div>
         <h1 className="page-title">{schema}</h1>
         <p className="page-subtitle">
-          {list.length} table(s) · Choisis une table pour explorer sa structure
-          et ses données.
+          {list.length} {list.length === 1 ? "table" : "tables"} · Choisis une
+          table pour explorer sa structure et ses données.
         </p>
       </header>
       <div className="schema-actions">

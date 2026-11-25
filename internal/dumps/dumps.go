@@ -21,6 +21,7 @@ import (
 
 	"github.com/OlivierLB/Sulcata/internal/catalog"
 	"github.com/OlivierLB/Sulcata/internal/config"
+	"github.com/OlivierLB/Sulcata/internal/nativeauth"
 	"github.com/OlivierLB/Sulcata/internal/snapshot"
 )
 
@@ -160,6 +161,7 @@ func LocalPath(cfg *config.Config, source config.DumpSource) string {
 // Apply downloads one version, runs the restore command, then promotes the
 // download over the previous local dump. A failure keeps the previous dump.
 func Apply(cfg *config.Config, connection, version string) error {
+	progress("preparing", 0, 0)
 	source, ok := cfg.DumpSource(connection)
 	if !ok {
 		return errors.New("no dump source configured for this connection")
@@ -201,21 +203,35 @@ func Apply(cfg *config.Config, connection, version string) error {
 	temporary := file.Name()
 	_ = file.Close()
 	defer os.Remove(temporary)
-	if source.Type == "directory" {
-		if err := copyFile(item.path, temporary); err != nil {
+	stopProgress := watchDownload(temporary, item.Size)
+	transferError := func() error {
+		if source.Type == "directory" {
+			if err := copyFile(item.path, temporary); err != nil {
+				return err
+			}
+		} else if _, err := AWS("s3api", "get-object", "--bucket", source.Bucket, "--key", source.Key, "--version-id", version, temporary); err != nil {
 			return err
 		}
-	} else if _, err := AWS("s3api", "get-object", "--bucket", source.Bucket, "--key", source.Key, "--version-id", version, temporary); err != nil {
-		return err
+		return nil
+	}()
+	stopProgress()
+	if transferError != nil {
+		return transferError
 	}
 	if info, err := os.Stat(temporary); err != nil || info.Size() != item.Size {
 		return errors.New("downloaded dump size does not match the selected version")
 	}
 	// Stream progress through the supervisor's pipe; the previous local dump
 	// stays untouched if restoration fails.
+	progress("restoring", 0, 0)
+	environment, cleanup, err := nativeauth.Environment()
+	if err != nil {
+		return err
+	}
+	defer cleanup()
 	command := shellCommand(source.RestoreCommand)
 	command.Dir = filepath.Dir(cfg.Path)
-	command.Env = append(os.Environ(), "SULCATA_DUMP_PATH="+temporary, "SULCATA_CONNECTION="+connection)
+	command.Env = append(environment, "PYTHONUNBUFFERED=1", "SULCATA_DUMP_PATH="+temporary, "SULCATA_CONNECTION="+connection)
 	command.Stdout, command.Stderr = os.Stdout, os.Stderr
 	if err := command.Run(); err != nil {
 		var exit *exec.ExitError
@@ -224,13 +240,19 @@ func Apply(cfg *config.Config, connection, version string) error {
 		}
 		return fmt.Errorf("restore command failed: %w", err)
 	}
+	progress("finalizing", 0, 0)
 	if err := os.Rename(temporary, destination); err != nil {
 		return err
 	}
 	if err := recordApplied(cfg, connection, *item); err != nil {
 		return err
 	}
-	return Export(cfg)
+	progress("catalog", 0, 0)
+	if err := Export(cfg); err != nil {
+		return err
+	}
+	progress("finished", 0, 0)
+	return nil
 }
 
 func recordApplied(cfg *config.Config, connection string, item Version) error {

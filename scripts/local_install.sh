@@ -5,7 +5,7 @@
 # 127.0.0.1, then runs get.sh against it. Rerunnable; get.sh asks before
 # installing WebKitGTK with sudo.
 #
-#   scripts/local_install.sh [VERSION]     (default 0.0.1)
+#   scripts/local_install.sh [VERSION]     (default 0.4.2)
 #   scripts/local_install.sh --uninstall
 set -euo pipefail
 
@@ -13,7 +13,7 @@ root=$(cd "$(dirname "$0")/.." && pwd)
 if [[ ${1:-} == --uninstall ]]; then
 	exec bash "$root/get.sh" --uninstall
 fi
-version=${1:-0.0.1}
+version=${1:-0.4.2}
 out=$root/.local/local-release
 port=9917
 # Go may live outside PATH (~/.local/go, or the toolchain install.sh downloads).

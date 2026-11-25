@@ -67,7 +67,7 @@ export function Events() {
           Événements planifiés <span className="count-badge">{all.length}</span>
         </h1>
         <p className="page-subtitle">
-          Analysez les tâches planifiées sur une période pour rechercher une
+          Analyse les tâches planifiées sur une période pour rechercher une
           origine aux ralentissements.
         </p>
       </header>

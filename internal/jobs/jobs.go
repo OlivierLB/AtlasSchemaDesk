@@ -11,15 +11,22 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 	"unicode/utf8"
 
 	"github.com/OlivierLB/Sulcata/internal/config"
 	"github.com/OlivierLB/Sulcata/internal/dumps"
+	"github.com/OlivierLB/Sulcata/internal/nativeauth"
 )
 
 const logRunes = 4000
+
+var progressRecord = regexp.MustCompile(`(?m)^\[sulcata-progress\] (preparing|downloading|restoring|finalizing|catalog|finished) ([0-9]+) ([0-9]+)\r?\n`)
+var terminalEscape = regexp.MustCompile(`\x1b\[[0-?]*[ -/]*[@-~]`)
 
 // Status is the public state of a job.
 type Status struct {
@@ -40,13 +47,14 @@ type Runner struct {
 	command []string
 	timeout time.Duration
 
-	mu        sync.Mutex
-	state     Status
-	rawLog    []rune
-	pending   []byte
-	cancelled chan struct{}
-	done      chan struct{}
-	pid       int
+	mu           sync.Mutex
+	state        Status
+	rawLog       []rune
+	pending      []byte
+	progressLine string
+	cancelled    chan struct{}
+	done         chan struct{}
+	pid          int
 	// cleanupHook replaces restore cleanup in tests.
 	cleanupHook func() error
 }
@@ -69,7 +77,7 @@ func newID() string {
 func (r *Runner) Status() Status {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	text := []rune(r.config.Redact(string(r.rawLog)))
+	text := []rune(r.config.Redact(terminalEscape.ReplaceAllString(progressRecord.ReplaceAllString(string(r.rawLog), ""), "")))
 	if r.running() {
 		// A password split across read chunks must not appear in a live tail.
 		if pending := r.config.MaxPasswordLength(); pending > 0 {
@@ -122,6 +130,7 @@ func (r *Runner) Start(command []string, context map[string]string, onDone func(
 	}
 	id, started := newID(), now()
 	r.rawLog, r.pending = nil, nil
+	r.progressLine = ""
 	r.cancelled, r.done = make(chan struct{}), make(chan struct{})
 	r.state = Status{ID: &id, State: "running", StartedAt: &started, Context: context}
 	go r.run(command, onDone, r.cancelled, r.done)
@@ -189,6 +198,27 @@ func (r *Runner) flush() {
 }
 
 func (r *Runner) appendText(text string) {
+	if r.Name == "restore" {
+		r.progressLine += text
+		for {
+			end := strings.IndexByte(r.progressLine, '\n')
+			if end < 0 {
+				break
+			}
+			line := r.progressLine[:end+1]
+			r.progressLine = r.progressLine[end+1:]
+			if match := progressRecord.FindStringSubmatch(line); match != nil {
+				current, e1 := strconv.ParseInt(match[2], 10, 64)
+				total, e2 := strconv.ParseInt(match[3], 10, 64)
+				if e1 == nil && e2 == nil && current <= total {
+					r.state.Context["phase"], r.state.Context["bytes"], r.state.Context["totalBytes"] = match[1], match[2], match[3]
+				}
+			}
+		}
+		if len(r.progressLine) > 1024 {
+			r.progressLine = r.progressLine[len(r.progressLine)-1024:]
+		}
+	}
 	keep := logRunes + r.config.MaxPasswordLength()
 	r.rawLog = append(r.rawLog, []rune(text)...)
 	if len(r.rawLog) > keep {
@@ -309,6 +339,9 @@ func (r *Runner) cleanupRestore() error {
 	r.mu.Unlock()
 	if r.Name != "restore" || pid == 0 {
 		return nil
+	}
+	if err := nativeauth.Cleanup(pid); err != nil {
+		return err
 	}
 	source, ok := r.config.DumpSource(engine)
 	if !ok {

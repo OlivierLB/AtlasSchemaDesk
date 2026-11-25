@@ -26,6 +26,8 @@ import { Maintenance } from "./Maintenance";
 import { Navigation } from "./Navigation";
 import { Icon } from "./Icon";
 import { UpdateBanner } from "./UpdateBanner";
+import { applyTheme, readTheme } from "./theme";
+import { RestorationProgress } from "./RestorationProgress";
 
 function sqlReducer(
   state: Record<string, SqlState>,
@@ -40,6 +42,8 @@ function sqlReducer(
   };
 }
 export function App() {
+  const [theme, setTheme] = useState(readTheme);
+  useEffect(() => applyTheme(theme), [theme]);
   const client = useQueryClient();
   const [sessionId, setSessionId] = useState("");
   const [expired, setExpired] = useState(false);
@@ -101,6 +105,7 @@ export function App() {
     queryKey: ["status", sessionId],
     queryFn: () => request<Status>("/api/status"),
     refetchInterval: 1000,
+    refetchIntervalInBackground: true,
     enabled: Boolean(sessionId) && !expired,
   });
   const session = useQuery({
@@ -354,7 +359,7 @@ export function App() {
             <span className="brand-mark" aria-hidden="true" />
             <div>
               <h1 className="brand-name">Sulcata</h1>
-              <p className="brand-subtitle">Votre espace de données</p>
+              <p className="brand-subtitle">L’atelier des données</p>
             </div>
           </a>
           <button
@@ -371,6 +376,22 @@ export function App() {
             <kbd>Ctrl K</kbd>
           </button>
           <div className="topbar-right">
+            <div className="theme-switch" role="group" aria-label="Apparence">
+              <button
+                aria-pressed={theme === "paper"}
+                onClick={() => setTheme("paper")}
+              >
+                <span className="theme-swatch paper" aria-hidden="true" />
+                Papier
+              </button>
+              <button
+                aria-pressed={theme === "charcoal"}
+                onClick={() => setTheme("charcoal")}
+              >
+                <span className="theme-swatch charcoal" aria-hidden="true" />
+                Charbon
+              </button>
+            </div>
             {transactionEngines.length > 0 && (
               <a
                 className="button tx-indicator"
@@ -448,6 +469,22 @@ export function App() {
             {errorText(status.error)}
           </div>
         )}
+        {status.data &&
+          ["running", "cancelling"].includes(status.data.apply.state) && (
+            <div className="restore-activity" aria-label="Restauration active">
+              <strong>
+                Restauration ·{" "}
+                {config.data?.connections.find(
+                  (connection) =>
+                    connection.id === status.data?.apply.context?.engine,
+                )?.label || status.data.apply.context?.engine}
+              </strong>
+              <RestorationProgress job={status.data.apply} compact />
+              <button className="button" onClick={() => setVersionsOpen(true)}>
+                Voir la restauration
+              </button>
+            </div>
+          )}
         {status.data &&
           ["error", "cancelled", "timed_out"].includes(
             status.data.apply.state,

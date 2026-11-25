@@ -20,7 +20,7 @@
 }
 .window-heading p {
   margin: 9px 0 0;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.7;
   color: var(--muted);
 }
@@ -41,7 +41,7 @@
   display: grid;
   gap: 8px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
 }
 .window-form input,
 .window-form select {
@@ -53,7 +53,7 @@
   background: var(--bg);
   color: var(--text);
   font: inherit;
-  font-size: 12px;
+  font-size: 13px;
 }
 .window-form input:disabled {
   opacity: 0.45;
@@ -76,13 +76,13 @@
 }
 .window-timezone {
   margin: 12px 24px 20px;
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
   line-height: 1.7;
 }
 .window-timezone button {
   margin-left: 8px;
-  font-size: 10px;
+  font-size: 12px;
 }
 .event-window > .feedback-card,
 .event-window > .section-help {
@@ -109,7 +109,7 @@
 }
 .window-result-heading p {
   margin: 8px 0 0;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   line-height: 1.6;
 }
@@ -133,7 +133,7 @@
   color: var(--text);
 }
 .window-metrics span {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   line-height: 1.6;
 }
@@ -152,7 +152,7 @@
   flex-wrap: wrap;
 }
 .window-timeline .section-help {
-  font-size: 10px;
+  font-size: 12px;
 }
 .window-bars {
   display: flex;
@@ -178,18 +178,18 @@
   max-height: 96px;
   min-height: 3px;
   flex-shrink: 0;
-  border: 1px solid #597faa;
+  border: 1px solid var(--blue);
   border-radius: 3px 3px 0 0;
-  background: #314f74;
+  background: var(--muted);
 }
 .window-bars button:hover > span {
-  background: #567fab;
+  background: var(--blue);
   border-color: var(--blue);
 }
 .window-bars small {
   min-height: 12px;
   visibility: hidden;
-  font-size: 9px;
+  font-size: 11px;
   color: var(--muted);
   line-height: 1;
   white-space: nowrap;
@@ -214,7 +214,7 @@
 }
 .window-events .button {
   white-space: nowrap;
-  font-size: 11px;
+  font-size: 12px;
 }
 .window-shared {
   margin-top: 28px;
@@ -246,7 +246,7 @@
   display: block;
   margin-top: 7px;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.6;
 }
 .window-event-links {
@@ -265,13 +265,13 @@
 .window-issues {
   padding: 16px;
   margin-top: 20px;
-  border: 1px solid #645536;
+  border: 1px solid var(--amber);
   border-radius: 7px;
-  background: #25231d;
+  background: var(--panel);
 }
 .window-issues summary {
   color: var(--amber);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.6;
   cursor: pointer;
 }
@@ -279,7 +279,7 @@
   display: grid;
   gap: 6px;
   margin: 14px 0 0;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.7;
   color: var(--muted);
 }
@@ -431,7 +431,7 @@
   gap: 7px;
   min-width: 0;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
 }
 .event-source select,
 .event-source input {
@@ -456,7 +456,7 @@
   margin-left: auto;
   padding-bottom: 11px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
 }
 .event-source-dot {
   width: 6px;
@@ -467,7 +467,7 @@
 .event-assumptions {
   margin-top: 14px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.7;
 }
 .event-assumptions summary {
@@ -489,7 +489,7 @@
 .window-result-note {
   margin: -2px 0 22px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.7;
 }
 @media (max-width: 600px) {
@@ -497,7 +497,7 @@
     gap: 18px;
   }
   .event-views > button {
-    font-size: 12px;
+    font-size: 13px;
   }
   .event-views .icon {
     display: none;

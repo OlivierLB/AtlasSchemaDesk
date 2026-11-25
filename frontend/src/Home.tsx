@@ -29,13 +29,40 @@ export function Home() {
   return (
     <div className="page home-page">
       <header className="page-header home-header">
-        <div className="eyebrow">VOTRE ESPACE DE TRAVAIL</div>
+        <div className="eyebrow">SULCATA / CARNET D’EXPLORATION</div>
         <h1 className="page-title">Vos bases de données</h1>
         <p className="page-subtitle">
-          Choisis un schéma pour explorer ses tables, comprendre leurs liens ou
-          consulter les données.
+          De la structure aux données, chaque lien compte. Ouvre un schéma pour
+          examiner ses tables et suivre leurs relations.
         </p>
       </header>
+      <div className="catalog-summary" aria-label="Résumé du catalogue">
+        <div>
+          <strong>{config.connections.length}</strong>
+          <span>connexions</span>
+        </div>
+        <div>
+          <strong>
+            {
+              new Set(tables.map((table) => `${table.engine}:${table.schema}`))
+                .size
+            }
+          </strong>
+          <span>schémas</span>
+        </div>
+        <div>
+          <strong>{tables.length}</strong>
+          <span>tables au catalogue</span>
+        </div>
+        {config.connections.length > 0 && (
+          <a href={href({ view: "sql", engine: config.connections[0].id })}>
+            <Icon name="sql" />
+            <span>
+              Écrire une requête<small>Console SQL</small>
+            </span>
+          </a>
+        )}
+      </div>
       {recent.length > 0 && (
         <section className="recent-section" aria-label="Tables récentes">
           <h2 className="section-title">Reprendre l’exploration</h2>
@@ -65,7 +92,7 @@ export function Home() {
       )}
       <div className="section-heading">
         <h2 className="section-title">
-          Bases disponibles{" "}
+          Répertoire des bases{" "}
           <span className="count-badge">{config.connections.length}</span>
         </h2>
         <a className="quiet-link" href="#/connexions">
@@ -77,8 +104,8 @@ export function Home() {
         <div className="empty-state first-run">
           <h2>Aucune base configurée</h2>
           <p>
-            Ajoute ta première base PostgreSQL ou MySQL : son adresse, son
-            utilisateur et son mot de passe suffisent.
+            Ajoute une connexion PostgreSQL ou MySQL pour commencer à explorer
+            les schémas et les données.
           </p>
           <a className="button primary" href="#/connexions?ajouter=1">
             + Ajouter une base
@@ -95,6 +122,7 @@ export function Home() {
           return (
             <article
               className="connection-card"
+              data-driver={connection.driver}
               key={connection.id}
               style={
                 { "--connection-color": connection.color } as CSSProperties

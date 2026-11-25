@@ -4,6 +4,10 @@ import { App } from "./App";
 import "./styles.css";
 import "./workspace.css";
 import "./screens.css";
+import "./atelier.css";
+import { applyTheme, readTheme } from "./theme";
+
+applyTheme(readTheme());
 
 const client = new QueryClient({
   defaultOptions: {

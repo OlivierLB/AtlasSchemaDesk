@@ -6,6 +6,7 @@ import copy
 import functools
 import json
 import threading
+from datetime import datetime, timezone
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
@@ -35,7 +36,7 @@ def main():
     state = dict(configPath="sulcata.example.toml", allowedDbHosts=["127.0.0.1"], connections=connections, dumpSources=[backup], pendingRestart=False)
     writes = []
     failures = []
-    runtime = dict(transactions={}, restore="idle", cancelled=False)
+    runtime = dict(transactions={}, restore="idle", cancelled=False, phase="downloading", log="Restoring sample backup")
     restores = []
     row_queries = []
     scheduled = dict(id="store:event:daily_refresh", kind="event", schema="public", name="daily_refresh", schedule="EVERY 1 DAY", status="ENABLED", body="CALL refresh_products();", impact=dict(writes=["public.products"], calls=["store:procedure:refresh_products"]), source=dict(status="matched", path="events/daily_refresh.sql", line=1))
@@ -63,7 +64,7 @@ def main():
         elif path.startswith("/api/sessions/"):
             data = dict(transactions=runtime["transactions"], expiresInSeconds=1800, active=0)
         elif path == "/api/status":
-            data = dict(state="success", transactions=runtime["transactions"], s3=dict(state="idle"), apply=dict(state=runtime["restore"], id="restore-job" if runtime["restore"] != "idle" else None, log="Restoring sample backup", context=dict(engine="library")))
+            data = dict(state="success", transactions=runtime["transactions"], s3=dict(state="idle"), apply=dict(state=runtime["restore"], id="restore-job" if runtime["restore"] != "idle" else None, startedAt=runtime.get("startedAt"), log=runtime["log"], context=dict(engine="library", phase=runtime["phase"], bytes="1048576", totalBytes="2097152")))
         elif path == "/data/schema.json":
             data = dict(generatedAt="2026-11-23", sources=dict(library=tables, store=[{**tables[0], "name": "products"}]))
         elif path == "/data/programs.json":
@@ -83,6 +84,7 @@ def main():
         elif path == "/api/apply":
             restores.append(route.request.post_data_json)
             runtime["restore"] = "running"
+            runtime["startedAt"] = datetime.now(timezone.utc).isoformat()
             data = dict(state="running", id="restore-job")
         elif path == "/api/s3/refresh":
             route.fulfill(status=500, json=dict(error="Source de sauvegarde indisponible (test)"))
@@ -121,6 +123,29 @@ def main():
             expect(page.get_by_role("heading", name="Vos bases de données")).to_be_visible()
             expect(page.locator(".connection-card")).to_have_count(2)
             page.screenshot(path=str(DEST / "home-desktop.png"))
+            # Appearance is a persistent application preference, shared by all tools.
+            paper = page.get_by_role("button", name="Papier", exact=True)
+            charcoal = page.get_by_role("button", name="Charbon", exact=True)
+            expect(paper).to_have_attribute("aria-pressed", "true")
+            charcoal.click()
+            expect(page.locator("html")).to_have_attribute("data-theme", "charcoal")
+            page.reload()
+            expect(charcoal).to_have_attribute("aria-pressed", "true")
+            page.screenshot(path=str(DEST / "home-charcoal.png"))
+            for route, name in [("#/sql/library", "sql"), ("#/events", "events"), ("#/connexions", "connections"), ("#/library/public/books/colonnes", "structure")]:
+                page.goto(base + "/" + route)
+                expect(page.locator(".page-title")).to_be_visible()
+                expect(page.locator("html")).to_have_attribute("data-theme", "charcoal")
+                page.screenshot(path=str(DEST / f"{name}-charcoal.png"))
+            for width in [360, 390, 768, 1024]:
+                page.set_viewport_size(dict(width=width, height=900))
+                page.goto(base)
+                expect(charcoal).to_be_visible()
+                assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), f"Theme toolbar overflow at {width}px"
+            page.screenshot(path=str(DEST / "home-charcoal-tablet.png"))
+            paper.click()
+            page.set_viewport_size(dict(width=1440, height=1000))
+            page.goto(base)
             database_buttons = page.locator(".tree-engine-toggle")
             expect(database_buttons).to_have_count(2)
             expect(database_buttons.nth(0)).to_have_attribute("aria-expanded", "false")
@@ -246,6 +271,30 @@ def main():
             maintenance.get_by_role("button", name="Confirmer la restauration").click()
             expect(maintenance.get_by_role("heading", name="Opérations du serveur")).to_be_visible()
             assert restores == [dict(engine="library", versionId="sample-v1")]
+            expect(maintenance.locator('progress[value]')).to_have_attribute("value", "1048576")
+            expect(maintenance.get_by_text("1.0 Mio / 2.0 Mio · 50 %")).to_be_visible()
+            expect(maintenance.get_by_label("Journal : Restauration", exact=True)).to_contain_text("Restoring sample backup")
+            page.screenshot(path=str(DEST / "restore-download-desktop.png"))
+            maintenance.get_by_role("button", name="Fermer", exact=True).click()
+            expect(page.get_by_label("Restauration active", exact=True)).to_be_visible()
+            page.locator("#sql-open").click()
+            expect(page.get_by_label("Restauration active", exact=True)).to_be_visible()
+            runtime["phase"] = "restoring"
+            runtime["log"] = "Creating tables…\nImport in progress"
+            page.get_by_role("button", name="Voir la restauration", exact=True).click()
+            expect(maintenance.get_by_role("heading", name="Opérations du serveur")).to_be_visible()
+            expect(maintenance.locator('progress:not([value])')).to_be_visible()
+            expect(maintenance.get_by_label("Journal : Restauration", exact=True)).to_contain_text("Creating tables…")
+            page.screenshot(path=str(DEST / "restore-running-desktop.png"))
+            maintenance.get_by_role("button", name="Fermer", exact=True).click()
+            page.set_viewport_size(dict(width=390, height=844))
+            page.screenshot(path=str(DEST / "restore-running-mobile.png"))
+            assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), "Restore banner mobile overflow"
+            page.get_by_role("button", name="Voir la restauration", exact=True).click()
+            expect(maintenance.get_by_label("Journal : Restauration", exact=True)).to_be_visible()
+            maintenance.get_by_role("button", name="Fermer", exact=True).click()
+            page.set_viewport_size(dict(width=1440, height=1000))
+            page.get_by_role("button", name="Voir la restauration", exact=True).click()
             maintenance.get_by_role("button", name="Annuler l’opération").click()
             expect(maintenance.get_by_text("La base peut être partiellement restaurée.", exact=False)).to_be_visible()
             assert runtime["cancelled"]

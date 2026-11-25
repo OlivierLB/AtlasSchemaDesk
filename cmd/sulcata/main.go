@@ -30,16 +30,20 @@ import (
 	"github.com/OlivierLB/Sulcata/internal/config"
 	"github.com/OlivierLB/Sulcata/internal/db"
 	"github.com/OlivierLB/Sulcata/internal/dumps"
+	"github.com/OlivierLB/Sulcata/internal/nativeauth"
 	"github.com/OlivierLB/Sulcata/internal/server"
 	"github.com/OlivierLB/Sulcata/internal/update"
 	"github.com/OlivierLB/Sulcata/web"
 )
 
 // version is set at build time with -ldflags "-X main.version=…".
-var version = "0.3.0"
+var version = "0.4.2"
 
 func main() {
 	log.SetFlags(0)
+	if len(os.Args) > 1 && os.Args[1] == nativeauth.Command {
+		os.Exit(nativeauth.Run(os.Stdout, os.Stderr))
+	}
 	command, args := "serve", os.Args[1:]
 	if len(args) > 0 {
 		switch args[0] {

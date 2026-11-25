@@ -531,6 +531,7 @@ export function Connections() {
               className={`settings-connection ${selectedConnection === connection.id ? "selected-connection" : ""}`}
               id={`connection-${connection.id}`}
               data-connection={connection.id}
+              data-driver={connection.driver}
               key={connection.id}
               style={
                 { "--connection-color": connection.color } as CSSProperties

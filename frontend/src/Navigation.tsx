@@ -72,6 +72,7 @@ export function Navigation({
   return (
     <>
       <nav className="primary-nav" aria-label="Navigation principale">
+        <div className="navigation-caption">Espace de travail</div>
         {links.map((link) => (
           <a
             key={link.view}

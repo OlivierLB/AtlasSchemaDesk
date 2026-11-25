@@ -1,13 +1,4 @@
 /* Workspace hierarchy: navigation, exploration, contextual tools. */
-:root {
-  --bg: #111720;
-  --panel: #171f2a;
-  --panel-2: #202b39;
-  --line: #2b3747;
-  --line-soft: #222e3c;
-  --muted: #a1afc1;
-  font-size: 14px;
-}
 body {
   min-width: 360px;
 }
@@ -42,7 +33,7 @@ summary:focus-visible,
   flex-basis: 72px;
   padding: 0 24px;
   gap: 28px;
-  background: #141b25;
+  background: var(--panel);
 }
 .brand {
   min-width: 224px;
@@ -55,7 +46,7 @@ summary:focus-visible,
   font-size: 15px;
 }
 .brand-subtitle {
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0;
   margin-top: 5px;
 }
@@ -70,14 +61,14 @@ summary:focus-visible,
   min-height: 36px;
   height: auto;
   padding: 8px 12px;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.3;
   border-radius: 7px;
   text-decoration: none;
 }
 .button:hover:not(:disabled) {
   background: var(--panel-2);
-  border-color: #50647e;
+  border-color: var(--muted);
 }
 .button:disabled {
   cursor: not-allowed;
@@ -85,20 +76,20 @@ summary:focus-visible,
 }
 .button.primary,
 .button.sql-run {
-  background: #263f5f;
-  border-color: #4a709d;
-  color: #c9e1ff;
+  background: var(--line);
+  border-color: var(--blue);
+  color: var(--text);
 }
 .button.primary:hover:not(:disabled),
 .button.sql-run:hover:not(:disabled) {
-  background: #315176;
+  background: var(--muted);
 }
 .catalog-status {
   display: flex;
   align-items: center;
   gap: 7px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
   white-space: nowrap;
 }
 .search-trigger.global-search {
@@ -113,7 +104,7 @@ summary:focus-visible,
   border: 1px solid var(--line);
   border-radius: 7px;
   background: var(--bg);
-  font-size: 12px;
+  font-size: 13px;
   text-align: left;
 }
 .global-search span {
@@ -137,7 +128,7 @@ summary:focus-visible,
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: #141b25;
+  background: var(--panel);
   padding: 0;
 }
 .primary-nav {
@@ -157,7 +148,7 @@ summary:focus-visible,
   border-radius: 6px;
   background: transparent;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
   text-decoration: none;
   text-align: left;
 }
@@ -166,9 +157,9 @@ summary:focus-visible,
   background: var(--panel-2);
 }
 .nav-item.active {
-  background: #20324b;
-  border-color: #2f4665;
-  color: #b7d6ff;
+  background: var(--line);
+  border-color: var(--line);
+  color: var(--blue);
   font-weight: 600;
 }
 .sidebar-controls {
@@ -182,7 +173,7 @@ summary:focus-visible,
   display: flex;
   justify-content: space-between;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-weight: 600;
@@ -215,7 +206,7 @@ summary:focus-visible,
   border: 0;
   padding: 0 6px 0 0;
   background: transparent;
-  font-size: 11px;
+  font-size: 12px;
 }
 .filter-field .tree-filter:focus {
   outline: none;
@@ -232,7 +223,7 @@ summary:focus-visible,
   gap: 8px;
   padding: 15px 8px 8px;
   margin: 0;
-  font-size: 12px;
+  font-size: 13px;
 }
 .tree-engine a {
   flex: 1;
@@ -242,7 +233,7 @@ summary:focus-visible,
 .tree-count {
   float: right;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 400;
 }
 .sidebar h2.tree-engine {
@@ -275,7 +266,7 @@ summary:focus-visible,
   width: 10px;
   flex-shrink: 0;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 .tree-engine-name {
   flex: 1;
@@ -298,7 +289,7 @@ summary:focus-visible,
   gap: 7px;
   padding: 8px 12px 8px 28px;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
   text-decoration: none;
 }
 .tree-sql-link:hover {
@@ -312,8 +303,8 @@ summary:focus-visible,
 }
 .sidebar summary {
   padding: 7px 8px 7px 2px;
-  font-size: 12px;
-  color: #c0ccda;
+  font-size: 13px;
+  color: var(--text);
   cursor: pointer;
 }
 .tree-table {
@@ -325,7 +316,7 @@ summary:focus-visible,
   border-radius: 4px;
   border-left: 2px solid transparent;
   font-family: ui-monospace, monospace;
-  font-size: 11px;
+  font-size: 12px;
 }
 .tree-table span {
   overflow: hidden;
@@ -338,15 +329,15 @@ summary:focus-visible,
   opacity: 0.6;
 }
 .tree-table.active {
-  background: #20324b;
-  color: #c9e1ff;
+  background: var(--line);
+  color: var(--text);
   border-left-color: var(--blue);
   font-weight: 600;
 }
 .tree-empty {
   padding: 12px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.6;
 }
 .tree-empty button {
@@ -358,7 +349,7 @@ summary:focus-visible,
   border-top: 1px solid var(--line);
 }
 .sidebar-footer .nav-item {
-  font-size: 11px;
+  font-size: 12px;
 }
 .main-bar {
   min-height: 45px;
@@ -367,7 +358,7 @@ summary:focus-visible,
   border-bottom: 1px solid var(--line-soft);
 }
 .crumbs {
-  font-size: 11px;
+  font-size: 12px;
   gap: 9px;
 }
 .main-scroll {
@@ -389,7 +380,7 @@ summary:focus-visible,
   margin-top: 9px;
 }
 .eyebrow {
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.12em;
   color: var(--muted);
   margin-bottom: 10px;
@@ -419,7 +410,7 @@ summary:focus-visible,
   border-radius: 4px;
   background: var(--panel-2);
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 .quiet-link {
   display: inline-flex;
@@ -427,7 +418,7 @@ summary:focus-visible,
   gap: 6px;
   color: var(--muted);
   text-decoration: none;
-  font-size: 11px;
+  font-size: 12px;
 }
 .quiet-link:hover {
   color: var(--blue);
@@ -458,10 +449,10 @@ summary:focus-visible,
   gap: 5px;
 }
 .recent-link small {
-  font-size: 10px;
+  font-size: 12px;
 }
 .recent-link strong {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   font-family: ui-monospace, monospace;
   color: var(--text);
@@ -512,28 +503,28 @@ summary:focus-visible,
 }
 .connection-driver {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 .access-badge {
   margin-left: auto;
-  font-size: 10px;
-  color: #b8c8db;
-  border: 1px solid #3b4b5f;
+  font-size: 12px;
+  color: var(--text);
+  border: 1px solid var(--line);
   border-radius: 5px;
   padding: 4px 7px;
   white-space: nowrap;
 }
 .access-badge.writable {
   color: var(--amber);
-  border-color: #5e4c30;
-  background: #29251e;
+  border-color: var(--amber);
+  background: var(--panel);
 }
 .connection-metrics {
   display: flex;
   align-items: center;
   gap: 18px;
   padding: 0 20px 18px;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
 }
 .connection-metrics strong {
@@ -568,11 +559,11 @@ summary:focus-visible,
 }
 .schema-name {
   font-family: ui-monospace, monospace;
-  font-size: 12px;
+  font-size: 13px;
   overflow-wrap: anywhere;
 }
 .schema-table-count {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
 }
 .schema-explore {
@@ -581,7 +572,7 @@ summary:focus-visible,
   gap: 6px;
   margin-left: auto;
   color: var(--blue);
-  font-size: 11px;
+  font-size: 12px;
 }
 .schema-explore .icon {
   width: 14px;
@@ -592,8 +583,8 @@ summary:focus-visible,
   gap: 9px;
   padding: 13px 20px;
   color: var(--muted);
-  background: #141c27;
-  font-size: 11px;
+  background: var(--panel);
+  font-size: 12px;
   text-decoration: none;
 }
 .connection-backup-link span {
@@ -609,7 +600,7 @@ summary:focus-visible,
 .card-empty {
   padding: 20px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.6;
 }
 .workflow-guide {
@@ -618,7 +609,7 @@ summary:focus-visible,
   flex-wrap: wrap;
   gap: 16px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
   margin-top: 30px;
   padding: 18px 0;
   border-top: 1px solid var(--line-soft);
@@ -640,7 +631,7 @@ summary:focus-visible,
   height: 21px;
   border: 1px solid var(--line);
   border-radius: 50%;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 500;
 }
 .empty-guidance {
@@ -664,7 +655,7 @@ summary:focus-visible,
 }
 .table-kicker {
   margin-bottom: 8px;
-  font-size: 12px;
+  font-size: 13px;
 }
 .table-badges {
   gap: 8px;
@@ -673,7 +664,7 @@ summary:focus-visible,
 .badge {
   display: inline-block;
   padding: 4px 8px;
-  font-size: 10px;
+  font-size: 12px;
 }
 .tabs {
   flex-wrap: nowrap;
@@ -683,7 +674,7 @@ summary:focus-visible,
 }
 .tab {
   padding: 12px 8px;
-  font-size: 12px;
+  font-size: 13px;
   white-space: nowrap;
 }
 .tab.active {
@@ -693,7 +684,7 @@ summary:focus-visible,
 .tab-description {
   margin: 0 0 18px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.6;
 }
 .table-scroll {
@@ -705,16 +696,16 @@ summary:focus-visible,
 .list-table th {
   background: var(--panel);
   padding: 12px;
-  font-size: 10px;
+  font-size: 12px;
 }
 .list-table td {
   padding: 12px;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.6;
 }
 .page-filter {
   height: 38px;
-  font-size: 12px;
+  font-size: 13px;
   margin-bottom: 18px;
 }
 .data-toolbar,
@@ -742,7 +733,7 @@ summary:focus-visible,
   flex-wrap: wrap;
   gap: 12px;
   line-height: 1.6;
-  font-size: 12px;
+  font-size: 13px;
 }
 .settings-header {
   display: flex;
@@ -778,13 +769,13 @@ summary:focus-visible,
   margin: 0;
 }
 .connection-details dt {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
   margin-bottom: 7px;
 }
 .connection-details dd {
   margin: 0;
-  font-size: 12px;
+  font-size: 13px;
   overflow-wrap: anywhere;
   font-family: ui-monospace, monospace;
 }
@@ -814,13 +805,13 @@ summary:focus-visible,
 }
 .linked-backup-heading h3 {
   margin: 0 0 5px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
 }
 .linked-backup-heading p {
   margin: 0;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 .linked-backup-heading > .button {
   margin-left: auto;
@@ -839,12 +830,12 @@ summary:focus-visible,
 }
 .backup-location code {
   color: var(--text);
-  font-size: 12px;
+  font-size: 13px;
   overflow-wrap: anywhere;
 }
 .backup-options {
   margin: 14px 0 0 44px;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
 }
 .backup-options summary,
@@ -859,7 +850,7 @@ summary:focus-visible,
 .configuration-details {
   margin-top: 24px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
   overflow-wrap: anywhere;
 }
 .settings-form {
@@ -877,7 +868,7 @@ summary:focus-visible,
 }
 .settings-form label {
   gap: 8px;
-  font-size: 12px;
+  font-size: 13px;
 }
 .settings-form input,
 .settings-form select {
@@ -898,7 +889,7 @@ summary:focus-visible,
   flex-wrap: wrap;
 }
 .settings-pending {
-  border: 1px solid #6c5832;
+  border: 1px solid var(--amber);
   border-radius: 8px;
   margin-bottom: 24px;
 }
@@ -952,7 +943,7 @@ summary:focus-visible,
     bottom: 0;
     z-index: 35;
     width: min(420px, 100vw);
-    box-shadow: -12px 0 40px #0006;
+    box-shadow: var(--shadow);
     overflow: auto;
   }
 }
@@ -997,14 +988,14 @@ summary:focus-visible,
     bottom: 0;
     width: min(300px, 85vw);
     max-height: none;
-    box-shadow: 10px 0 30px #0005;
+    box-shadow: var(--shadow);
   }
   .navigation-backdrop {
     display: block;
     position: fixed;
     z-index: 39;
     inset: 64px 0 0;
-    background: #0008;
+    background: color-mix(in srgb, var(--ink) 53%, transparent);
     border: 0;
   }
   .main-bar {
@@ -1026,7 +1017,7 @@ summary:focus-visible,
     gap: 6px;
   }
   .tx-indicator {
-    font-size: 10px;
+    font-size: 12px;
     max-width: 150px;
     overflow: hidden;
   }
@@ -1049,7 +1040,7 @@ summary:focus-visible,
     display: none;
   }
   .topbar-right #refresh {
-    font-size: 11px;
+    font-size: 12px;
     padding: 8px;
   }
   .topbar-right #refresh .icon {
@@ -1062,21 +1053,21 @@ summary:focus-visible,
     font-size: 23px;
   }
   .page-subtitle {
-    font-size: 12px;
+    font-size: 13px;
   }
   .section-heading {
     align-items: start;
   }
   .quiet-link {
     max-width: 120px;
-    font-size: 10px;
+    font-size: 12px;
   }
   .connection-card-header {
     padding: 16px;
     flex-wrap: wrap;
   }
   .access-badge {
-    font-size: 9px;
+    font-size: 11px;
   }
   .connection-symbol {
     width: 30px;
@@ -1090,7 +1081,7 @@ summary:focus-visible,
     gap: 8px;
   }
   .schema-table-count {
-    font-size: 9px;
+    font-size: 11px;
   }
   .workflow-guide {
     gap: 12px;

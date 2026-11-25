@@ -5,6 +5,7 @@ import { useSulcata } from "./context";
 import { errorText } from "./model";
 import type { ConnectionsOverview, Dumps, Job, VersionIndex } from "./model";
 import { Icon } from "./Icon";
+import { RestorationProgress } from "./RestorationProgress";
 
 const jobLabels: Record<Job["state"], string> = {
   idle: "En attente",
@@ -25,7 +26,9 @@ export function Maintenance({ onClose }: { onClose: () => void }) {
   const [engine, setEngine] = useState(
     route.engine || config.connections[0]?.id || "",
   );
-  const [section, setSection] = useState("schema");
+  const [section, setSection] = useState(() =>
+    status?.apply.id && status.apply.state !== "idle" ? "operations" : "schema",
+  );
   const [confirm, setConfirm] = useState<{
     engine: string;
     versionId: string;
@@ -41,6 +44,7 @@ export function Maintenance({ onClose }: { onClose: () => void }) {
     closeButton.current?.focus();
     return () => {
       if (opener?.isConnected) opener.focus();
+      else document.getElementById("versions-toggle")?.focus();
     };
   }, []);
   useEffect(() => {
@@ -470,6 +474,14 @@ export function Maintenance({ onClose }: { onClose: () => void }) {
               {status ? (
                 <div className="jobs-list">
                   <JobView
+                    label="Restauration"
+                    job={status.apply}
+                    pending={pending}
+                    cancel={(id) => {
+                      void operation(`/api/jobs/${id}/cancel`, {});
+                    }}
+                  />
+                  <JobView
                     label="Export du catalogue"
                     job={status}
                     pending={pending}
@@ -480,14 +492,6 @@ export function Maintenance({ onClose }: { onClose: () => void }) {
                   <JobView
                     label="Liste des sauvegardes"
                     job={status.s3}
-                    pending={pending}
-                    cancel={(id) => {
-                      void operation(`/api/jobs/${id}/cancel`, {});
-                    }}
-                  />
-                  <JobView
-                    label="Restauration"
-                    job={status.apply}
                     pending={pending}
                     cancel={(id) => {
                       void operation(`/api/jobs/${id}/cancel`, {});
@@ -539,15 +543,28 @@ function JobView({
   pending: boolean;
   cancel: (id: string) => void;
 }) {
+  const log = useRef<HTMLPreElement>(null);
+  const follow = useRef(true);
+  useEffect(() => {
+    follow.current = true;
+  }, [job.id]);
+  useEffect(() => {
+    if (follow.current && log.current)
+      log.current.scrollTop = log.current.scrollHeight;
+  }, [job.log]);
   return (
-    <article className="job-card">
+    <article
+      className={`job-card ${label === "Restauration" && job.state !== "idle" ? "restore-job" : ""}`}
+    >
       <header>
         <div>
           <h4>{label}</h4>
           <span className="section-help">
             {job.durationSeconds != null
               ? `${job.durationSeconds} s`
-              : "Aucune durée disponible"}
+              : inProgress(job)
+                ? "Suivi en direct"
+                : "Aucune durée disponible"}
             {job.context?.engine ? ` · ${job.context.engine}` : ""}
           </span>
         </div>
@@ -557,6 +574,9 @@ function JobView({
           {jobLabels[job.state]}
         </span>
       </header>
+      {label === "Restauration" && job.state !== "idle" && (
+        <RestorationProgress job={job} />
+      )}
       {job.id && inProgress(job) && (
         <button
           className="button danger"
@@ -575,11 +595,26 @@ function JobView({
         )}
       <details
         className="job-details"
-        open={job.state === "error" || job.state === "timed_out"}
+        open={
+          inProgress(job) || job.state === "error" || job.state === "timed_out"
+        }
       >
         <summary>Journal de l’opération</summary>
-        <pre className="job-log code-surface">
-          {job.log || "Aucune sortie."}
+        <pre
+          ref={log}
+          className="job-log code-surface"
+          aria-label={`Journal : ${label}`}
+          tabIndex={0}
+          onScroll={(event) => {
+            const node = event.currentTarget;
+            follow.current =
+              node.scrollHeight - node.scrollTop - node.clientHeight < 48;
+          }}
+        >
+          {job.log ||
+            (inProgress(job)
+              ? "L’opération a démarré. En attente de la première sortie de la commande…"
+              : "Aucune sortie.")}
         </pre>
       </details>
     </article>
